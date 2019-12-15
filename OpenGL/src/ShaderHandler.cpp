@@ -1,6 +1,4 @@
 #include "ShaderHandler.h"
-#include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -34,9 +32,14 @@ void ShaderHandler::setUniform4f(const std::string& name, float v0, float v1, fl
 
 unsigned int ShaderHandler::GetUniformLocation(const std::string& name)
 {
+	if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end())
+		return m_UniformLocationCache[name];
+
 	GLCall(int location = glGetUniformLocation(m_RenderedID, name.c_str()));
 	if (location == 1)
 		std::cout << "Warning: uniform '" << name << "' doesn't exist!" << std::endl;
+
+	m_UniformLocationCache[name] = location;
 	return location;
 }
 

@@ -8,8 +8,10 @@
 
 #include "Renderer.h"
 #include "VertexBuffer.h"
+#include "VertexBufferLayout.h"
 #include "IndexBuffer.h"
 #include "ShaderHandler.h"
+#include "VertexArray.h"
 
 
 static void calculateVertices(float verticesPositions[], unsigned int rows, unsigned int columns)
@@ -51,26 +53,27 @@ int main(void)
 
 	{
 		float positions[] = {
-			-0.5f, -0.5f,
+			/*-0.5f, -0.5f,
 			 0.5f, -0.5f,
 			 0.5f, 0.5f,
-			-0.5f, 0.5f
+			-0.5f, 0.5f*/
 
-			//-0.5f, 0.5f, 0.0f,	//0
-			//0.0f, 0.5f, 0.0f,	//1
-			//0.5f, 0.5f, 0.0f,	//2
-			//-0.5f, -0.5f, 0.0f,	//3
-			//0.0f, -0.5f, 0.0f,	//4
-			//0.5f, -0.5f, 0.0f,	//5	
+			-0.5f, 0.5f, 0.0f,	//0
+			0.0f, 0.5f, 0.0f,	//1
+			0.5f, 0.5f, 0.0f,	//2
+			-0.5f, -0.5f, 0.0f,	//3
+			0.0f, -0.5f, 0.0f,	//4
+			0.5f, -0.5f, 0.0f,	//5	
 		};
 
 		unsigned int indices[] = {
-			0, 1, 2,
-			2, 3, 0,
-			/*0, 3, 1,
+			/*0, 1, 2,
+			2, 3, 0,*/
+
+			0, 3, 1,
 			3, 1, 4,
 			1, 4, 2,
-			4, 2, 5*/
+			4, 2, 5
 		};
 
 		unsigned int rows = 2;
@@ -90,14 +93,12 @@ int main(void)
 				std::cout << std::endl;
 		}
 
-		unsigned int vao;
-		GLCall(glGenVertexArrays(1, &vao));
-		GLCall(glBindVertexArray(vao));
+		VertexArray va;
+		VertexBuffer vb(positions, sizeof(positions) * 3 * sizeof(float));
 
-		VertexBuffer vb(positions, sizeof(positions) * 2 * sizeof(float));
-
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+		VertexBufferLayout layout;
+		layout.Push<float>(3);
+		va.AddBuffer(vb, layout);
 
 		IndexBuffer ib(indices, sizeof(indices)/sizeof(unsigned int));
 
@@ -105,35 +106,35 @@ int main(void)
 		shader.Bind();
 		shader.setUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
 
+		va.Unbind();
 		vb.Unbind();
 		ib.Unbind();
 		shader.Unbind();
+
+		Renderer renderer;
 
 		float r = 0.0f;
 		float increment = 0.5f;
 		/* Loop until the user closes the window */
 
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 		while (!glfwWindowShouldClose(window))
 		{
 			/* Render here */
-			glClear(GL_COLOR_BUFFER_BIT);
+			renderer.Clear();
 
 			shader.Bind();
-			shader.setUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
+			shader.setUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
 
-			GLCall(glBindVertexArray(vao));
-			ib.Bind();
+			renderer.Draw(va, ib, shader);
 
-			GLCall(glDrawElements(GL_TRIANGLES, sizeof(indices)*6, GL_UNSIGNED_INT, nullptr));
-
-			/*if (r > 1.0f)
+			if (r > 1.0f)
 				increment = -0.05f;
 			else if (r < 0.0f)
 				increment = 0.05f;
 
-			r += increment;*/
+			r += increment;
 
 			/* Swap front and back buffers */
 			glfwSwapBuffers(window);
