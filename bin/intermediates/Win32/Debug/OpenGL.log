@@ -1,2 +1,6 @@
 ﻿  Application.cpp
+C:\dev\OpenGL\OpenGL\src\Application.cpp(19,28): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+C:\dev\OpenGL\OpenGL\src\Application.cpp(20,32): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+C:\dev\OpenGL\OpenGL\src\Application.cpp(82,22): warning C4018: '<': signed/unsigned mismatch
+C:\dev\OpenGL\OpenGL\src\Application.cpp(78,9): warning C4101: 'testVertices': unreferenced local variable
   OpenGL.vcxproj -> C:\dev\OpenGL\bin\Win32\Debug\OpenGL.exe
