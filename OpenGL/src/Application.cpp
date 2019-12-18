@@ -2,9 +2,12 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <string>
 #include <sstream>
+
+#include <vector>
 
 #include "Renderer.h"
 #include "VertexBuffer.h"
@@ -13,15 +16,46 @@
 #include "ShaderHandler.h"
 #include "VertexArray.h"
 
+const int dimension = 3;
 
-static void calculateVertices(float verticesPositions[], unsigned int rows, unsigned int columns)
+
+static std::vector<float> calculateVertices(const unsigned int rows, const unsigned int columns, const unsigned int dimention)
 {
-	for (unsigned int i = 0; i < rows*columns*3; i+=3)
+	std::vector<float> positions;
+	
+	for (unsigned int i = 0; i < columns; i++)
 	{
-		verticesPositions[i] = i / rows;
-		verticesPositions[i + 1] = i / columns;
-		verticesPositions[i + 2] = 0;	//z coordinate
+		for (unsigned int j = 0; j < rows; j++)
+		{
+			positions.push_back(float(i) / float(rows));
+			positions.push_back(float(j) / float(columns));
+			if (dimention == 3)
+				positions.push_back(0);
+		}
 	}
+
+	return positions;
+}
+
+static std::vector<unsigned int> calculatePositions(const unsigned int rows, const unsigned int columns)
+{
+	std::vector<unsigned int> positions;
+
+	for (unsigned int i = 0; i < columns - 1; i++)
+	{
+		for (unsigned int j = 0; j < rows - 1; j++)
+		{
+
+			positions.push_back(i * rows + j);
+			positions.push_back(i * rows + j + 1);
+			positions.push_back((i + 1) * rows + j + 1);
+			positions.push_back((i + 1) * rows + j + 1);
+			positions.push_back((i + 1) * rows + j);
+			positions.push_back(i * rows + j);
+		}
+	}
+
+	return positions;
 }
 
 
@@ -52,55 +86,69 @@ int main(void)
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
 	{
-		float positions[] = {
-			/*-0.5f, -0.5f,
-			 0.5f, -0.5f,
-			 0.5f, 0.5f,
-			-0.5f, 0.5f*/
+		/*float positions[] = {
 
-			-0.5f, 0.5f, 0.0f,	//0
-			0.0f, 0.5f, 0.0f,	//1
-			0.5f, 0.5f, 0.0f,	//2
-			-0.5f, -0.5f, 0.0f,	//3
-			0.0f, -0.5f, 0.0f,	//4
-			0.5f, -0.5f, 0.0f,	//5	
+			0.000000f, 0.000000f, 0.000000f,
+			0.000000f, 0.333333f, 0.000000f,
+			0.000000f, 0.666667f, 0.000000f,
+			0.333333f, 0.000000f, 0.000000f,
+			0.333333f, 0.333333f, 0.000000f,
+			0.333333f, 0.666667f, 0.000000f,
+			0.666667f, 0.000000f, 0.000000f,
+			0.666667f, 0.333333f, 0.000000f,
+			0.666667f, 0.666667f, 0.000000f,
 		};
 
 		unsigned int indices[] = {
-			/*0, 1, 2,
-			2, 3, 0,*/
 
-			0, 3, 1,
-			3, 1, 4,
-			1, 4, 2,
-			4, 2, 5
-		};
+			0, 1, 4,
+			4, 3, 0,
+			1, 2, 5,
+			5, 4, 1,
+			3, 4, 7,
+			7, 6, 3,
+			4, 5, 8,
+			8, 7, 4,
 
-		unsigned int rows = 2;
-		unsigned int columns = 2;
-		float testVertices[2*2*3];
-		//calculateVertices(testVertices, rows, columns);
-		for (float i = 0; i < rows * columns * 3; i+=3)
+		};*/
+
+		const unsigned int rows = 5;
+		const unsigned int columns = 5;
+		std::vector<float> positions = calculateVertices(rows, columns, dimension);
+		std::vector<unsigned int> indices = calculatePositions(rows, columns);
+
+		std::cout << std::endl;
+		std::cout << "Rows: " << rows  << std::endl;
+		std::cout << "Columns: " << columns << std::endl;
+		std::cout << std::endl;
+		std::cout << "Vertex coordinates: " << std::endl;
+		for (int i = 0; i < positions.size(); i+=3)
 		{
-			for (int j = 0; j < columns; j++)
-			{
-
-			}
-			std::cout << float(i/3/rows) << " ";
-			std::cout << float(i/3/columns) << " ";
-			std::cout << "0" << " ";
-			if (int(i) % 3 == 0)
-				std::cout << std::endl;
+			std::cout << std::fixed;
+			std::cout << std::setprecision(6);
+			std::cout << float(positions[i]) << "f, ";
+			std::cout << float(positions[i+1]) << "f, ";
+			std::cout << float(positions[i+2]) << "f, ";
+			std::cout << std::endl;
+		}
+		std::cout << std::endl;
+		std::cout << "Vertex positions: " << std::endl;
+		for (int i = 0; i < indices.size(); i += 3)
+		{
+			std::cout << indices[i] << ", ";
+			std::cout << indices[i + 1] << ", ";
+			std::cout << indices[i + 2] << ", ";
+			std::cout << std::endl;
 		}
 
 		VertexArray va;
-		VertexBuffer vb(positions, sizeof(positions) * 3 * sizeof(float));
+		VertexBuffer vb(positions.data(), positions.size() * sizeof(float));
 
 		VertexBufferLayout layout;
-		layout.Push<float>(3);
+		layout.Push<float>(dimension);
 		va.AddBuffer(vb, layout);
 
-		IndexBuffer ib(indices, sizeof(indices)/sizeof(unsigned int));
+		IndexBuffer ib(indices.data(), sizeof(indices) * sizeof(unsigned int));
 
 		ShaderHandler shader("resources/shaders/Basic.shader");
 		shader.Bind();
@@ -116,8 +164,6 @@ int main(void)
 		float r = 0.0f;
 		float increment = 0.5f;
 		/* Loop until the user closes the window */
-
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 		while (!glfwWindowShouldClose(window))
 		{
@@ -135,6 +181,13 @@ int main(void)
 				increment = 0.05f;
 
 			r += increment;
+
+			if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+			if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+				glfwSetWindowShouldClose(window, GL_TRUE);
 
 			/* Swap front and back buffers */
 			glfwSwapBuffers(window);
