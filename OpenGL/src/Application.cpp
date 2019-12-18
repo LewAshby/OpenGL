@@ -59,6 +59,32 @@ static std::vector<unsigned int> calculatePositions(const unsigned int rows, con
 }
 
 
+static void print(std::vector<float> positions, std::vector<unsigned int> indices, int rows, int columns)
+{
+	std::cout << "Vertex positions: " << std::endl;
+	for (int i = 0; i < positions.size(); i += 3)
+	{
+		std::cout << std::fixed;
+		std::cout << std::setprecision(6);
+		std::cout << float(positions[i]) << "f, ";
+		std::cout << float(positions[i + 1]) << "f, ";
+		std::cout << float(positions[i + 2]) << "f, ";
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+	std::cout << "Vertex indices: " << std::endl;
+	for (int i = 0; i < indices.size(); i += 3)
+	{
+		std::cout << std::fixed;
+		std::cout << std::setprecision(6);
+		std::cout << indices[i] << ", ";
+		std::cout << indices[i + 1] << ", ";
+		std::cout << indices[i + 2] << ", ";
+		std::cout << std::endl;
+	}
+	std::cout << std::endl;
+}
+
 int main(void)
 {
     GLFWwindow* window;
@@ -112,8 +138,8 @@ int main(void)
 
 		};*/
 
-		const unsigned int rows = 5;
-		const unsigned int columns = 5;
+		const unsigned int rows = 50;
+		const unsigned int columns = 50;
 		std::vector<float> positions = calculateVertices(rows, columns, dimension);
 		std::vector<unsigned int> indices = calculatePositions(rows, columns);
 
@@ -121,25 +147,8 @@ int main(void)
 		std::cout << "Rows: " << rows  << std::endl;
 		std::cout << "Columns: " << columns << std::endl;
 		std::cout << std::endl;
-		std::cout << "Vertex coordinates: " << std::endl;
-		for (int i = 0; i < positions.size(); i+=3)
-		{
-			std::cout << std::fixed;
-			std::cout << std::setprecision(6);
-			std::cout << float(positions[i]) << "f, ";
-			std::cout << float(positions[i+1]) << "f, ";
-			std::cout << float(positions[i+2]) << "f, ";
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-		std::cout << "Vertex positions: " << std::endl;
-		for (int i = 0; i < indices.size(); i += 3)
-		{
-			std::cout << indices[i] << ", ";
-			std::cout << indices[i + 1] << ", ";
-			std::cout << indices[i + 2] << ", ";
-			std::cout << std::endl;
-		}
+		//print(positions, indices, rows, columns);
+		
 
 		VertexArray va;
 		VertexBuffer vb(positions.data(), positions.size() * sizeof(float));
@@ -148,7 +157,7 @@ int main(void)
 		layout.Push<float>(dimension);
 		va.AddBuffer(vb, layout);
 
-		IndexBuffer ib(indices.data(), sizeof(indices) * sizeof(unsigned int));
+		IndexBuffer ib(indices.data(), indices.size() * sizeof(unsigned int));
 
 		ShaderHandler shader("resources/shaders/Basic.shader");
 		shader.Bind();

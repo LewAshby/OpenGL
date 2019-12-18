@@ -1,4 +1,7 @@
 ﻿  Application.cpp
-C:\dev\OpenGL\OpenGL\src\Application.cpp(125,21): warning C4018: '<': signed/unsigned mismatch
-C:\dev\OpenGL\OpenGL\src\Application.cpp(136,21): warning C4018: '<': signed/unsigned mismatch
+C:\dev\OpenGL\OpenGL\src\Application.cpp(65,20): warning C4018: '<': signed/unsigned mismatch
+C:\dev\OpenGL\OpenGL\src\Application.cpp(76,20): warning C4018: '<': signed/unsigned mismatch
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+glew32s.lib(glew.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'glew32s.lib(glew.obj)' or at 'C:\dev\OpenGL\bin\Win32\Debug\vc120.pdb'; linking object as if no debug info
   OpenGL.vcxproj -> C:\dev\OpenGL\bin\Win32\Debug\OpenGL.exe
