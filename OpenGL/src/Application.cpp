@@ -8,6 +8,9 @@
 #include <sstream>
 
 #include <vector>
+#include <fstream>
+#include <iterator>
+#include <algorithm>
 
 #include "Renderer.h"
 #include "VertexBuffer.h"
@@ -18,11 +21,22 @@
 
 const int dimension = 3;
 
+struct FileData
+{
+	unsigned int ncols;
+	unsigned int nrows;
+	float cellsize;
+	std::vector<float> altitudes;
+	int NoDataValue;
 
-static std::vector<float> calculateVertices(const unsigned int rows, const unsigned int columns, const unsigned int dimention)
+};
+
+static std::vector<float> calculateVertices(const unsigned int rows, const unsigned int columns, const unsigned int dimention, const std::vector<float> z)
 {
 	std::vector<float> positions;
-	
+	float min = *min_element(z.begin(), z.end());
+	float max = *max_element(z.begin(), z.end());
+
 	for (unsigned int i = 0; i < columns; i++)
 	{
 		for (unsigned int j = 0; j < rows; j++)
@@ -30,7 +44,7 @@ static std::vector<float> calculateVertices(const unsigned int rows, const unsig
 			positions.push_back(float(i) / float(rows));
 			positions.push_back(float(j) / float(columns));
 			if (dimention == 3)
-				positions.push_back(0);
+				positions.push_back((z[i+j]-min)/(max-min));
 		}
 	}
 
@@ -58,7 +72,6 @@ static std::vector<unsigned int> calculatePositions(const unsigned int rows, con
 	return positions;
 }
 
-
 static void print(std::vector<float> positions, std::vector<unsigned int> indices, int rows, int columns)
 {
 	std::cout << "Vertex positions: " << std::endl;
@@ -85,6 +98,43 @@ static void print(std::vector<float> positions, std::vector<unsigned int> indice
 	std::cout << std::endl;
 }
 
+static FileData readFile(std::string path)
+{
+	std::ifstream infile(path);
+	FileData data;
+	std::string line;
+	std::string l1, l2;
+	int flag = 0;
+	std::string temp;
+	
+	while (std::getline(infile, line))
+	{
+		if (flag == 1)
+		{
+			std::stringstream ss(line);
+			while (ss >> temp)
+				data.altitudes.push_back(std::stof(temp));
+		}
+		else
+		{
+			std::stringstream ss(line);
+			ss >> l1 >> l2;
+			if (l1 == "ncols")
+				data.ncols = std::stoi(l2);
+			if (l1 == "nrows")
+				data.nrows = std::stoi(l2);
+			if (l1 == "cellsize")
+				data.cellsize = std::stof(l2);
+			if (l1 == "NODATA_value")
+			{
+				data.NoDataValue = std::stoi(l2);
+				flag = 1;
+			}
+		}
+	}
+	return data;
+}
+
 int main(void)
 {
     GLFWwindow* window;
@@ -94,7 +144,7 @@ int main(void)
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(800, 800, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -112,43 +162,16 @@ int main(void)
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
 	{
-		/*float positions[] = {
 
-			0.000000f, 0.000000f, 0.000000f,
-			0.000000f, 0.333333f, 0.000000f,
-			0.000000f, 0.666667f, 0.000000f,
-			0.333333f, 0.000000f, 0.000000f,
-			0.333333f, 0.333333f, 0.000000f,
-			0.333333f, 0.666667f, 0.000000f,
-			0.666667f, 0.000000f, 0.000000f,
-			0.666667f, 0.333333f, 0.000000f,
-			0.666667f, 0.666667f, 0.000000f,
-		};
-
-		unsigned int indices[] = {
-
-			0, 1, 4,
-			4, 3, 0,
-			1, 2, 5,
-			5, 4, 1,
-			3, 4, 7,
-			7, 6, 3,
-			4, 5, 8,
-			8, 7, 4,
-
-		};*/
-
-		const unsigned int rows = 50;
-		const unsigned int columns = 50;
-		std::vector<float> positions = calculateVertices(rows, columns, dimension);
-		std::vector<unsigned int> indices = calculatePositions(rows, columns);
+		FileData data = readFile("resources/test.dat");
+		std::vector<float> positions = calculateVertices(data.nrows, data.ncols, dimension, data.altitudes);
+		std::vector<unsigned int> indices = calculatePositions(data.nrows, data.ncols);
 
 		std::cout << std::endl;
-		std::cout << "Rows: " << rows  << std::endl;
-		std::cout << "Columns: " << columns << std::endl;
+		std::cout << "Rows: " << data.nrows  << std::endl;
+		std::cout << "Columns: " << data.ncols << std::endl;
 		std::cout << std::endl;
-		//print(positions, indices, rows, columns);
-		
+		//print(positions, indices, data.nrows, data.ncols);
 
 		VertexArray va;
 		VertexBuffer vb(positions.data(), positions.size() * sizeof(float));
@@ -184,10 +207,10 @@ int main(void)
 
 			renderer.Draw(va, ib, shader);
 
-			if (r > 1.0f)
+			/*if (r > 1.0f)
 				increment = -0.05f;
 			else if (r < 0.0f)
-				increment = 0.05f;
+				increment = 0.05f;*/
 
 			r += increment;
 

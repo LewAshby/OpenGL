@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\shaders\Basic.shader" />
+    <None Include="resources\altitudes.dat" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Renderer.h">

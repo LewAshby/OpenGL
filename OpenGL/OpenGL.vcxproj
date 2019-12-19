@@ -162,6 +162,7 @@
     <ClCompile Include="src\VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\altitudes.dat" />
     <None Include="resources\shaders\Basic.shader" />
   </ItemGroup>
   <ItemGroup>
