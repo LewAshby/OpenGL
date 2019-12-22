@@ -22,8 +22,10 @@ class ShaderHandler
 		void Bind() const;
 		void Unbind() const;
 
+		void setUniform1f(const std::string& name, float value);
+		void setUniform1i(const std::string& name, int value);
 		void setUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
-		unsigned int GetUniformLocation(const std::string& name);
+		int GetUniformLocation(const std::string& name);
 		ShaderProgramSource ParseShader(const std::string&);
 		unsigned int CompileShader(unsigned int, const std::string&);
 		unsigned int CreateShader(const std::string&, const std::string&);

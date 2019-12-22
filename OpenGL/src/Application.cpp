@@ -18,6 +18,7 @@
 #include "IndexBuffer.h"
 #include "ShaderHandler.h"
 #include "VertexArray.h"
+#include "Texture.h"
 
 const int dimension = 3;
 
@@ -45,6 +46,8 @@ static std::vector<float> calculateVertices(const unsigned int rows, const unsig
 			positions.push_back(float(j) / float(columns));
 			if (dimention == 3)
 				positions.push_back((z[i+j]-min)/(max-min));
+			positions.push_back(float(i) / float(rows));
+			positions.push_back(float(j) / float(columns));
 		}
 	}
 
@@ -75,13 +78,15 @@ static std::vector<unsigned int> calculatePositions(const unsigned int rows, con
 static void print(std::vector<float> positions, std::vector<unsigned int> indices, int rows, int columns)
 {
 	std::cout << "Vertex positions: " << std::endl;
-	for (int i = 0; i < positions.size(); i += 3)
+	for (int i = 0; i < positions.size(); i += 5)
 	{
 		std::cout << std::fixed;
 		std::cout << std::setprecision(6);
 		std::cout << float(positions[i]) << "f, ";
 		std::cout << float(positions[i + 1]) << "f, ";
 		std::cout << float(positions[i + 2]) << "f, ";
+		std::cout << float(positions[i + 3]) << "f, ";
+		std::cout << float(positions[i + 4]) << "f, ";
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
@@ -102,10 +107,8 @@ static FileData readFile(std::string path)
 {
 	std::ifstream infile(path);
 	FileData data;
-	std::string line;
-	std::string l1, l2;
+	std::string line, l1, l2, temp;
 	int flag = 0;
-	std::string temp;
 	
 	while (std::getline(infile, line))
 	{
@@ -163,28 +166,36 @@ int main(void)
 
 	{
 
-		FileData data = readFile("resources/test.dat");
-		std::vector<float> positions = calculateVertices(data.nrows, data.ncols, dimension, data.altitudes);
-		std::vector<unsigned int> indices = calculatePositions(data.nrows, data.ncols);
+		FileData ZData = readFile("resources/test.dat");
+		std::vector<float> positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.altitudes);
+		std::vector<unsigned int> indices = calculatePositions(ZData.nrows, ZData.ncols);
 
 		std::cout << std::endl;
-		std::cout << "Rows: " << data.nrows  << std::endl;
-		std::cout << "Columns: " << data.ncols << std::endl;
+		std::cout << "Rows: " << ZData.nrows  << std::endl;
+		std::cout << "Columns: " << ZData.ncols << std::endl;
 		std::cout << std::endl;
-		//print(positions, indices, data.nrows, data.ncols);
+		//print(positions, indices, ZData.nrows, ZData.ncols);
+
+		GLCall(glEnable(GL_BLEND));
+		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
 		VertexArray va;
 		VertexBuffer vb(positions.data(), positions.size() * sizeof(float));
 
 		VertexBufferLayout layout;
 		layout.Push<float>(dimension);
+		layout.Push<float>(2);
 		va.AddBuffer(vb, layout);
 
 		IndexBuffer ib(indices.data(), indices.size() * sizeof(unsigned int));
 
 		ShaderHandler shader("resources/shaders/Basic.shader");
 		shader.Bind();
-		shader.setUniform4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
+		shader.setUniform4f("u_Color", 0.0f, 1.0f, 0.0f, 1.0f);
+
+		Texture texture("resources/textures/texture.png");
+		texture.Bind();
+		shader.setUniform1i("u_Texture", 0);
 
 		va.Unbind();
 		vb.Unbind();
@@ -203,7 +214,7 @@ int main(void)
 			renderer.Clear();
 
 			shader.Bind();
-			shader.setUniform4f("u_Color", r, 0.3f, 0.8f, 1.0f);
+			shader.setUniform4f("u_Color", r, 1.0f, 0.0f, 1.0f);
 
 			renderer.Draw(va, ib, shader);
 
