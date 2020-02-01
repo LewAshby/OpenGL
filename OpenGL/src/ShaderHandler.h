@@ -3,6 +3,9 @@
 #include <string>
 #include <unordered_map>
 
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 struct ShaderProgramSource
 {
 	std::string VertexSource;
@@ -25,6 +28,7 @@ class ShaderHandler
 		void setUniform1f(const std::string& name, float value);
 		void setUniform1i(const std::string& name, int value);
 		void setUniform4f(const std::string& name, float v0, float v1, float v2, float v3);
+		void setUniformMat4f(const std::string& name, const glm::mat4& matrix);
 		int GetUniformLocation(const std::string& name);
 		ShaderProgramSource ParseShader(const std::string&);
 		unsigned int CompileShader(unsigned int, const std::string&);

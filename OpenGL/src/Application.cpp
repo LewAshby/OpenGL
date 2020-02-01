@@ -20,6 +20,9 @@
 #include "VertexArray.h"
 #include "Texture.h"
 
+#include "glm/glm.hpp"
+#include <glm/gtc/matrix_transform.hpp>
+
 const int dimension = 3;
 
 struct FileData
@@ -32,7 +35,7 @@ struct FileData
 
 };
 
-static std::vector<float> calculateVertices(const unsigned int rows, const unsigned int columns, const unsigned int dimention, const std::vector<float> z)
+static std::vector<float> calculateVertices(const unsigned int rows, const unsigned int columns, const unsigned int dimention, const std::vector<float> z, float offset)
 {
 	std::vector<float> positions;
 	float min = *min_element(z.begin(), z.end());
@@ -42,12 +45,12 @@ static std::vector<float> calculateVertices(const unsigned int rows, const unsig
 	{
 		for (unsigned int j = 0; j < rows; j++)
 		{
-			positions.push_back(float(i) / float(rows));
-			positions.push_back(float(j) / float(columns));
-			if (dimention == 3)
-				positions.push_back((z[i+j]-min)/(max-min));
-			positions.push_back(float(i) / float(rows));
-			positions.push_back(float(j) / float(columns));
+			positions.push_back(float(i) / float(rows));		// x-point coordinate
+			positions.push_back(float(j) / float(columns));		// y-point coordinate
+			if (dimention == 3)				
+				positions.push_back((z[i+j]-min)/(max-min));	// z-point coordinate
+			positions.push_back(float(i) / float(rows));		// x-texture coordinate
+			positions.push_back(float(j) / float(columns));		// y-texture coordinate
 		}
 	}
 
@@ -166,8 +169,8 @@ int main(void)
 
 	{
 
-		FileData ZData = readFile("resources/test.dat");
-		std::vector<float> positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.altitudes);
+		FileData ZData = readFile("resources/altitudes.dat");
+		std::vector<float> positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.altitudes, ZData.cellsize);
 		std::vector<unsigned int> indices = calculatePositions(ZData.nrows, ZData.ncols);
 
 		std::cout << std::endl;
@@ -176,8 +179,10 @@ int main(void)
 		std::cout << std::endl;
 		//print(positions, indices, ZData.nrows, ZData.ncols);
 
-		GLCall(glEnable(GL_BLEND));
-		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+		////// blend for transparency-alpha channels //////
+		/*GLCall(glEnable(GL_BLEND));
+		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));*/
+		////// blend for transparency-alpha channels //////
 
 		VertexArray va;
 		VertexBuffer vb(positions.data(), positions.size() * sizeof(float));
@@ -189,9 +194,12 @@ int main(void)
 
 		IndexBuffer ib(indices.data(), indices.size() * sizeof(unsigned int));
 
+		glm::mat4 proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f);
+
 		ShaderHandler shader("resources/shaders/Basic.shader");
 		shader.Bind();
-		shader.setUniform4f("u_Color", 0.0f, 1.0f, 0.0f, 1.0f);
+		//shader.setUniform4f("u_Color", 0.0f, 1.0f, 0.0f, 1.0f);
+		shader.setUniformMat4f("u_MVP", proj);
 
 		Texture texture("resources/textures/texture.png");
 		texture.Bind();
@@ -214,7 +222,8 @@ int main(void)
 			renderer.Clear();
 
 			shader.Bind();
-			shader.setUniform4f("u_Color", r, 1.0f, 0.0f, 1.0f);
+			//shader.setUniform4f("u_Color", r, 1.0f, 0.0f, 1.0f);
+ 
 
 			renderer.Draw(va, ib, shader);
 
