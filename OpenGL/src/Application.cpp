@@ -23,6 +23,29 @@
 #include "glm/glm.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "camera.h"
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void processInput(GLFWwindow* window);
+
+// settings
+const unsigned int SCR_WIDTH = 800;
+const unsigned int SCR_HEIGHT = 600;
+
+// camera
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
+
+// timing
+float deltaTime = 0.0f;	// time between current frame and last frame
+float lastFrame = 0.0f;
+
+
+
 const int dimension = 3;
 
 struct FileData
@@ -41,14 +64,18 @@ static std::vector<float> calculateVertices(const unsigned int rows, const unsig
 	float min = *min_element(z.begin(), z.end());
 	float max = *max_element(z.begin(), z.end());
 
-	for (unsigned int i = 0; i < columns; i++)
+	int k = 0;
+
+	for (unsigned int i = 0; i < rows; i++)
 	{
-		for (unsigned int j = 0; j < rows; j++)
+		for (unsigned int j = 0; j < columns; j++)
 		{
 			positions.push_back(float(i) / float(rows));		// x-point coordinate
 			positions.push_back(float(j) / float(columns));		// y-point coordinate
-			if (dimention == 3)				
-				positions.push_back((z[i+j]-min)/(max-min));	// z-point coordinate
+			if (dimention == 3) {
+				positions.push_back((z[k]-min) / (max - min));	// z-point coordinate
+				k++;
+			}
 			positions.push_back(float(i) / float(rows));		// x-texture coordinate
 			positions.push_back(float(j) / float(columns));		// y-texture coordinate
 		}
@@ -110,6 +137,7 @@ static FileData readFile(std::string path)
 {
 	std::ifstream infile(path);
 	FileData data;
+	std::vector<float> alt_temp;
 	std::string line, l1, l2, temp;
 	int flag = 0;
 	
@@ -120,6 +148,9 @@ static FileData readFile(std::string path)
 			std::stringstream ss(line);
 			while (ss >> temp)
 				data.altitudes.push_back(std::stof(temp));
+			for (int i = data.altitudes.size() - 1; i >= 0; i--)
+				alt_temp.push_back(data.altitudes[i]);
+			data.altitudes.clear();
 		}
 		else
 		{
@@ -128,7 +159,8 @@ static FileData readFile(std::string path)
 			if (l1 == "ncols")
 				data.ncols = std::stoi(l2);
 			if (l1 == "nrows")
-				data.nrows = std::stoi(l2);
+				//data.nrows = std::stoi(l2);
+				data.nrows = data.ncols;
 			if (l1 == "cellsize")
 				data.cellsize = std::stof(l2);
 			if (l1 == "NODATA_value")
@@ -138,6 +170,10 @@ static FileData readFile(std::string path)
 			}
 		}
 	}
+
+	for (int i = alt_temp.size()-1; i >= 0; i--)
+		data.altitudes.push_back(alt_temp[i]);
+
 	return data;
 }
 
@@ -156,6 +192,19 @@ int main(void)
         glfwTerminate();
         return -1;
     }
+
+
+	
+	glfwMakeContextCurrent(window);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+
+	// tell GLFW to capture our mouse
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+
+
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
@@ -198,8 +247,8 @@ int main(void)
 
 		ShaderHandler shader("resources/shaders/Basic.shader");
 		shader.Bind();
-		//shader.setUniform4f("u_Color", 0.0f, 1.0f, 0.0f, 1.0f);
-		shader.setUniformMat4f("u_MVP", proj);
+		shader.setUniform4f("u_Color", 0.4f, 0.4f, 0.4f, 1.0f);
+		//shader.setUniformMat4f("u_MVP", proj);
 
 		Texture texture("resources/textures/texture.png");
 		texture.Bind();
@@ -218,19 +267,51 @@ int main(void)
 
 		while (!glfwWindowShouldClose(window))
 		{
+
+			// per-frame time logic
+			// --------------------
+			float currentFrame = glfwGetTime();
+			deltaTime = currentFrame - lastFrame;
+			lastFrame = currentFrame;
+
+			// input
+			// -----
+			processInput(window);
+
+
+
+
 			/* Render here */
 			renderer.Clear();
 
 			shader.Bind();
 			//shader.setUniform4f("u_Color", r, 1.0f, 0.0f, 1.0f);
- 
+			
+
+
+			// pass projection matrix to shader (note that in this case it could change every frame)
+			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			shader.setUniformMat4f("projection", projection);
+
+			// camera/view transformation
+			glm::mat4 view = camera.GetViewMatrix();
+			shader.setUniformMat4f("view", view);
+
+			//render boxes
+			//glBindVertexArray(VAO);
+
+			glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+			model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+			float angle = 20.0f;
+			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			shader.setUniformMat4f("model", model);
+			
+
+
+
 
 			renderer.Draw(va, ib, shader);
 
-			/*if (r > 1.0f)
-				increment = -0.05f;
-			else if (r < 0.0f)
-				increment = 0.05f;*/
 
 			r += increment;
 
@@ -251,4 +332,60 @@ int main(void)
 	}
     glfwTerminate();
     return 0;
+}
+
+
+
+// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
+// ---------------------------------------------------------------------------------------------------------
+void processInput(GLFWwindow* window)
+{
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camera.ProcessKeyboard(FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera.ProcessKeyboard(BACKWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera.ProcessKeyboard(LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera.ProcessKeyboard(RIGHT, deltaTime);
+}
+
+// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+	// make sure the viewport matches the new window dimensions; note that width and 
+	// height will be significantly larger than specified on retina displays.
+	glViewport(0, 0, width, height);
+}
+
+
+// glfw: whenever the mouse moves, this callback is called
+// -------------------------------------------------------
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+	lastX = xpos;
+	lastY = ypos;
+
+	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	camera.ProcessMouseScroll(yoffset);
 }
