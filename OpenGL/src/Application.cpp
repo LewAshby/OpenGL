@@ -31,8 +31,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
 // settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 1024;
+const unsigned int SCR_HEIGHT = 1024;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -53,12 +53,13 @@ struct FileData
 	unsigned int ncols;
 	unsigned int nrows;
 	float cellsize;
-	std::vector<float> altitudes;
+	std::vector<float> values;
 	int NoDataValue;
 
 };
 
-static std::vector<float> calculateVertices(const unsigned int rows, const unsigned int columns, const unsigned int dimention, const std::vector<float> z, float offset)
+static std::vector<float> calculateVertices(const unsigned int rows, const unsigned int columns, const unsigned int dimention, 
+	const std::vector<float> z, float offset, const std::vector<float> lava)
 {
 	std::vector<float> positions;
 	float min = *min_element(z.begin(), z.end());
@@ -70,14 +71,26 @@ static std::vector<float> calculateVertices(const unsigned int rows, const unsig
 	{
 		for (unsigned int j = 0; j < columns; j++)
 		{
-			positions.push_back(float(i) / float(rows));		// x-point coordinate
-			positions.push_back(float(j) / float(columns));		// y-point coordinate
-			if (dimention == 3) {
+			positions.push_back(float(j) / float(columns));		// x-point coordinate
+			positions.push_back(float(i) / float(rows));		// y-point coordinate
+			if (dimention == 3) 
 				positions.push_back((z[k]-min) / (max - min));	// z-point coordinate
-				k++;
-			}
-			positions.push_back(float(i) / float(rows));		// x-texture coordinate
-			positions.push_back(float(j) / float(columns));		// y-texture coordinate
+
+			float r = 0.4f;
+			float g = 0.4f;
+			float b = 0.4f;
+			float a = 1.0f;
+			if (lava[k] > 0)
+				r = 1.0f;
+			positions.push_back(r);								// r - color
+			positions.push_back(g);								// g - color	
+			positions.push_back(b);								// b - color
+			positions.push_back(a);								// a - color
+
+			k++;
+
+			positions.push_back(float(j) / float(columns));		// x-texture coordinate
+			positions.push_back(float(i) / float(rows));		// y-texture coordinate
 		}
 	}
 
@@ -88,17 +101,17 @@ static std::vector<unsigned int> calculatePositions(const unsigned int rows, con
 {
 	std::vector<unsigned int> positions;
 
-	for (unsigned int i = 0; i < columns - 1; i++)
+	for (unsigned int i = 0; i < rows - 1; i++)
 	{
-		for (unsigned int j = 0; j < rows - 1; j++)
+		for (unsigned int j = 0; j < columns - 1; j++)
 		{
 
-			positions.push_back(i * rows + j);
-			positions.push_back(i * rows + j + 1);
-			positions.push_back((i + 1) * rows + j + 1);
-			positions.push_back((i + 1) * rows + j + 1);
-			positions.push_back((i + 1) * rows + j);
-			positions.push_back(i * rows + j);
+			positions.push_back(i * columns + j);
+			positions.push_back(i * columns + j + 1);
+			positions.push_back((i + 1) * columns + j + 1);
+			positions.push_back((i + 1) * columns + j + 1);
+			positions.push_back((i + 1) * columns + j);
+			positions.push_back(i * columns + j);
 		}
 	}
 
@@ -120,6 +133,9 @@ static void print(std::vector<float> positions, std::vector<unsigned int> indice
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
+
+	std::ofstream myfile;
+	myfile.open("indices.txt");
 	std::cout << "Vertex indices: " << std::endl;
 	for (int i = 0; i < indices.size(); i += 3)
 	{
@@ -131,26 +147,27 @@ static void print(std::vector<float> positions, std::vector<unsigned int> indice
 		std::cout << std::endl;
 	}
 	std::cout << std::endl;
+	myfile.close();
 }
 
 static FileData readFile(std::string path)
 {
-	std::ifstream infile(path);
+	std::ifstream infileAlt(path);
 	FileData data;
 	std::vector<float> alt_temp;
 	std::string line, l1, l2, temp;
 	int flag = 0;
 	
-	while (std::getline(infile, line))
+	while (std::getline(infileAlt, line))
 	{
 		if (flag == 1)
 		{
 			std::stringstream ss(line);
 			while (ss >> temp)
-				data.altitudes.push_back(std::stof(temp));
-			for (int i = data.altitudes.size() - 1; i >= 0; i--)
-				alt_temp.push_back(data.altitudes[i]);
-			data.altitudes.clear();
+				data.values.push_back(std::stof(temp));
+			for (int i = data.values.size() - 1; i >= 0; i--)
+				alt_temp.push_back(data.values[i]);
+			data.values.clear();
 		}
 		else
 		{
@@ -159,8 +176,8 @@ static FileData readFile(std::string path)
 			if (l1 == "ncols")
 				data.ncols = std::stoi(l2);
 			if (l1 == "nrows")
-				//data.nrows = std::stoi(l2);
-				data.nrows = data.ncols;
+				data.nrows = std::stoi(l2);
+				//data.nrows = data.ncols;
 			if (l1 == "cellsize")
 				data.cellsize = std::stof(l2);
 			if (l1 == "NODATA_value")
@@ -172,7 +189,7 @@ static FileData readFile(std::string path)
 	}
 
 	for (int i = alt_temp.size()-1; i >= 0; i--)
-		data.altitudes.push_back(alt_temp[i]);
+		data.values.push_back(alt_temp[i]);
 
 	return data;
 }
@@ -186,15 +203,13 @@ int main(void)
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(800, 800, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Flow FLow", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
         return -1;
     }
 
-
-	
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
@@ -202,9 +217,6 @@ int main(void)
 
 	// tell GLFW to capture our mouse
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-
-
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
@@ -219,7 +231,11 @@ int main(void)
 	{
 
 		FileData ZData = readFile("resources/altitudes.dat");
-		std::vector<float> positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.altitudes, ZData.cellsize);
+		FileData LData = readFile("resources/lava.dat");
+		FileData TData = readFile("resources/temperature.dat");
+		for (int i = 0; i < ZData.values.size(); i++)
+			ZData.values[i] += LData.values[i];
+		std::vector<float> positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.values, ZData.cellsize, LData.values);
 		std::vector<unsigned int> indices = calculatePositions(ZData.nrows, ZData.ncols);
 
 		std::cout << std::endl;
@@ -238,17 +254,15 @@ int main(void)
 
 		VertexBufferLayout layout;
 		layout.Push<float>(dimension);
+		layout.Push<float>(4);
 		layout.Push<float>(2);
 		va.AddBuffer(vb, layout);
 
 		IndexBuffer ib(indices.data(), indices.size() * sizeof(unsigned int));
 
-		glm::mat4 proj = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f);
-
 		ShaderHandler shader("resources/shaders/Basic.shader");
 		shader.Bind();
 		shader.setUniform4f("u_Color", 0.4f, 0.4f, 0.4f, 1.0f);
-		//shader.setUniformMat4f("u_MVP", proj);
 
 		Texture texture("resources/textures/texture.png");
 		texture.Bind();
@@ -278,16 +292,10 @@ int main(void)
 			// -----
 			processInput(window);
 
-
-
-
 			/* Render here */
 			renderer.Clear();
 
 			shader.Bind();
-			//shader.setUniform4f("u_Color", r, 1.0f, 0.0f, 1.0f);
-			
-
 
 			// pass projection matrix to shader (note that in this case it could change every frame)
 			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -296,31 +304,9 @@ int main(void)
 			// camera/view transformation
 			glm::mat4 view = camera.GetViewMatrix();
 			shader.setUniformMat4f("view", view);
-
-			//render boxes
-			//glBindVertexArray(VAO);
-
-			glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-			model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-			float angle = 20.0f;
-			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			shader.setUniformMat4f("model", model);
 			
 
-
-
-
 			renderer.Draw(va, ib, shader);
-
-
-			r += increment;
-
-			if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-				glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-			if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-			if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-				glfwSetWindowShouldClose(window, GL_TRUE);
 
 			/* Swap front and back buffers */
 			glfwSwapBuffers(window);
@@ -351,6 +337,12 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
