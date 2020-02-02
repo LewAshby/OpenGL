@@ -262,7 +262,7 @@ int main(void)
 
 		ShaderHandler shader("resources/shaders/Basic.shader");
 		shader.Bind();
-		shader.setUniform4f("u_Color", 0.4f, 0.4f, 0.4f, 1.0f);
+		//shader.setUniform4f("u_Color", 0.4f, 0.4f, 0.4f, 1.0f);
 
 		Texture texture("resources/textures/texture.png");
 		texture.Bind();
