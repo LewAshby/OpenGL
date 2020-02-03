@@ -44,6 +44,9 @@ bool firstMouse = true;
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 
+// lighting
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
 
 
 const int dimension = 3;
@@ -249,6 +252,76 @@ int main(void)
 		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));*/
 		////// blend for transparency-alpha channels //////
 
+		float vertices[] = {
+			 0.0f,  0.0f, -0.5f,  0.0f,  0.0f, -1.0f,
+			 1.0f,  0.0f, -0.5f,  0.0f,  0.0f, -1.0f,
+			 1.0f,  1.0f, -0.5f,  0.0f,  0.0f, -1.0f,
+			 1.0f,  1.0f, -0.5f,  0.0f,  0.0f, -1.0f,
+			 0.0f,  1.0f, -0.5f,  0.0f,  0.0f, -1.0f,
+			 0.0f,  0.0f, -0.5f,  0.0f,  0.0f, -1.0f,
+
+			 0.0f,  0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+			 1.0f,  0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+			 1.0f,  1.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+			 1.0f,  1.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+			 0.0f,  1.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+			 0.0f,  0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+
+			 0.0f,  1.0f,  0.5f, -1.0f,  0.0f,  0.0f,
+			 0.0f,  1.0f, -0.5f, -1.0f,  0.0f,  0.0f,
+			 0.0f,  0.0f, -0.5f, -1.0f,  0.0f,  0.0f,
+			 0.0f,  0.0f, -0.5f, -1.0f,  0.0f,  0.0f,
+			 0.0f,  0.0f,  0.5f, -1.0f,  0.0f,  0.0f,
+			 0.0f,  1.0f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+			 1.0f,  1.0f,  0.5f,  1.0f,  0.0f,  0.0f,
+			 1.0f,  1.0f, -0.5f,  1.0f,  0.0f,  0.0f,
+			 1.0f,  0.0f, -0.5f,  1.0f,  0.0f,  0.0f,
+			 1.0f,  0.0f, -0.5f,  1.0f,  0.0f,  0.0f,
+			 1.0f,  0.0f,  0.5f,  1.0f,  0.0f,  0.0f,
+			 1.0f,  1.0f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+			 0.0f,  0.0f, -0.5f,  0.0f, -1.0f,  0.0f,
+			 1.0f,  0.0f, -0.5f,  0.0f, -1.0f,  0.0f,
+			 1.0f,  0.0f,  0.5f,  0.0f, -1.0f,  0.0f,
+			 1.0f,  0.0f,  0.5f,  0.0f, -1.0f,  0.0f,
+			 0.0f,  0.f,  0.5f,  0.0f, -1.0f,  0.0f,
+			 0.0f,  0.0f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+			 0.0f,  1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
+			 1.0f,  1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
+			 1.0f,  1.0f,  0.5f,  0.0f,  1.0f,  0.0f,
+			 1.0f,  1.0f,  0.5f,  0.0f,  1.0f,  0.0f,
+			 0.0f,  1.0f,  0.5f,  0.0f,  1.0f,  0.0f,
+			 0.0f,  1.0f, -0.5f,  0.0f,  1.0f,  0.0f
+		};
+		unsigned int VBO, cubeVAO;
+		glGenVertexArrays(1, &cubeVAO);
+		glGenBuffers(1, &VBO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+		glBindVertexArray(cubeVAO);
+
+		// position attribute
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+		// normal attribute
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+		glEnableVertexAttribArray(1);
+
+		// second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+		unsigned int lightVAO;
+		glGenVertexArrays(1, &lightVAO);
+		glBindVertexArray(lightVAO);
+
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		// note that we update the lamp's position attribute's stride to reflect the updated buffer data
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+		glEnableVertexAttribArray(0);
+
+
 		VertexArray va;
 		VertexBuffer vb(positions.data(), positions.size() * sizeof(float));
 
@@ -261,6 +334,7 @@ int main(void)
 		IndexBuffer ib(indices.data(), indices.size() * sizeof(unsigned int));
 
 		ShaderHandler shader("resources/shaders/Basic.shader");
+		ShaderHandler light_shader("resources/shaders/Light.shader");
 		shader.Bind();
 		//shader.setUniform4f("u_Color", 0.4f, 0.4f, 0.4f, 1.0f);
 
@@ -295,15 +369,45 @@ int main(void)
 			/* Render here */
 			renderer.Clear();
 
+
+			// be sure to activate shader when setting uniforms/drawing objects
 			shader.Bind();
+			shader.setUniformVec3("objectColor", 0.4f, 0.4f, 0.4f);
+			shader.setUniformVec3("lightColor", 1.0f, 1.0f, 1.0f);
+			shader.setUniformVec3("lightPos", lightPos);
+			shader.setUniformVec3("viewPos", camera.Position);
+
+			// view/projection transformations
+			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			glm::mat4 view = camera.GetViewMatrix();
+			shader.setUniformMat4f("projection", projection);
+			shader.setUniformMat4f("view", view);
+
+			// world transformation
+			glm::mat4 model = glm::mat4(1.0f);
+			shader.setUniformMat4f("model", model);
+
+
+			//shader.Bind();
 
 			// pass projection matrix to shader (note that in this case it could change every frame)
-			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 			shader.setUniformMat4f("projection", projection);
 
 			// camera/view transformation
-			glm::mat4 view = camera.GetViewMatrix();
 			shader.setUniformMat4f("view", view);
+
+
+			// also draw the lamp object
+			light_shader.Bind();
+			light_shader.setUniformMat4f("projection", projection);
+			light_shader.setUniformMat4f("view", view);
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, lightPos);
+			model = glm::scale(model, glm::vec3(0.3f)); // a smaller cube
+			light_shader.setUniformMat4f("model", model);
+
+			glBindVertexArray(lightVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
 			
 
 			renderer.Draw(va, ib, shader);
