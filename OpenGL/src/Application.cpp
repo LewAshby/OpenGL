@@ -45,7 +45,8 @@ float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 
 // lighting
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+//glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightPos(0.5f, 0.0f, 2.0f);
 
 
 
@@ -69,6 +70,10 @@ static std::vector<float> calculateVertices(const unsigned int rows, const unsig
 	float max = *max_element(z.begin(), z.end());
 
 	int k = 0;
+	float r = 0.4f;
+	float g = 0.4f;
+	float b = 0.4f;
+	float a = 1.0f;
 
 	for (unsigned int i = 0; i < rows; i++)
 	{
@@ -79,12 +84,11 @@ static std::vector<float> calculateVertices(const unsigned int rows, const unsig
 			if (dimention == 3) 
 				positions.push_back((z[k]-min) / (max - min));	// z-point coordinate
 
-			float r = 0.4f;
-			float g = 0.4f;
-			float b = 0.4f;
-			float a = 1.0f;
+			
 			if (lava[k] > 0)
 				r = 1.0f;
+			else
+				r = 0.4f;
 			positions.push_back(r);								// r - color
 			positions.push_back(g);								// g - color	
 			positions.push_back(b);								// b - color
@@ -94,6 +98,10 @@ static std::vector<float> calculateVertices(const unsigned int rows, const unsig
 
 			positions.push_back(float(j) / float(columns));		// x-texture coordinate
 			positions.push_back(float(i) / float(rows));		// y-texture coordinate
+
+			positions.push_back(((double)rand() / (RAND_MAX)));
+			positions.push_back(((double)rand() / (RAND_MAX)));
+			positions.push_back(((double)rand() / (RAND_MAX)));
 		}
 	}
 
@@ -329,6 +337,7 @@ int main(void)
 		layout.Push<float>(dimension);
 		layout.Push<float>(4);
 		layout.Push<float>(2);
+		layout.Push<float>(3);
 		va.AddBuffer(vb, layout);
 
 		IndexBuffer ib(indices.data(), indices.size() * sizeof(unsigned int));
@@ -372,7 +381,6 @@ int main(void)
 
 			// be sure to activate shader when setting uniforms/drawing objects
 			shader.Bind();
-			shader.setUniformVec3("objectColor", 0.4f, 0.4f, 0.4f);
 			shader.setUniformVec3("lightColor", 1.0f, 1.0f, 1.0f);
 			shader.setUniformVec3("lightPos", lightPos);
 			shader.setUniformVec3("viewPos", camera.Position);

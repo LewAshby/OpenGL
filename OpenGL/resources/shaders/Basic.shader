@@ -39,7 +39,6 @@ in vec3 Normal;
 uniform vec3 lightPos;
 uniform vec3 viewPos;
 uniform vec3 lightColor;
-uniform vec3 objectColor;
 
 uniform vec4 u_Color;
 uniform sampler2D u_Texture;
@@ -53,7 +52,7 @@ void main()
     //color = vec4(0.4f, 0.4f, 0.4f, 1.0f);
 
     // Ambient
-    float ambientStrength = 0.2f;
+    float ambientStrength = 0.5f;
     vec3 ambient = ambientStrength * lightColor;
 
     // Diffuse 
@@ -70,6 +69,6 @@ void main()
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec3 specular = specularStrength * spec * lightColor;
 
-    vec3 result = (ambient + diffuse + specular) * objectColor;
+    vec3 result = (ambient + diffuse + specular);
     color = vec4(result, 1.0f) * ourColor;
 };
