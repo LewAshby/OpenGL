@@ -46,7 +46,7 @@ float lastFrame = 0.0f;
 
 // lighting
 //glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-glm::vec3 lightPos(0.5f, 0.0f, 2.0f);
+glm::vec3 lightPos(0.5f, 1.0f, 2.0f);
 
 
 
@@ -84,24 +84,29 @@ static std::vector<float> calculateVertices(const unsigned int rows, const unsig
 			if (dimention == 3) 
 				positions.push_back((z[k]-min) / (max - min));	// z-point coordinate
 
-			
-			if (lava[k] > 0)
-				r = 1.0f;
-			else
+			g = (z[k] - min) / (max - min);
+			b = (z[k] - min) / (max - min);
+			if (lava[k] > 0) {
 				r = 0.4f;
+				g = 0.06f;
+				b = 0.06f;
+			}
+			else
+				r = (z[k] - min) / (max - min);
+
 			positions.push_back(r);								// r - color
 			positions.push_back(g);								// g - color	
 			positions.push_back(b);								// b - color
 			positions.push_back(a);								// a - color
 
-			k++;
-
 			positions.push_back(float(j) / float(columns));		// x-texture coordinate
 			positions.push_back(float(i) / float(rows));		// y-texture coordinate
 
-			positions.push_back(((double)rand() / (RAND_MAX)));
-			positions.push_back(((double)rand() / (RAND_MAX)));
-			positions.push_back(((double)rand() / (RAND_MAX)));
+			positions.push_back(float(j) / float(columns));		
+			positions.push_back(float(i) / float(rows));
+			positions.push_back((z[k]-min) / (max - min));
+
+			k++;
 		}
 	}
 
@@ -303,31 +308,13 @@ int main(void)
 			 0.0f,  1.0f,  0.5f,  0.0f,  1.0f,  0.0f,
 			 0.0f,  1.0f, -0.5f,  0.0f,  1.0f,  0.0f
 		};
-		unsigned int VBO, cubeVAO;
-		glGenVertexArrays(1, &cubeVAO);
-		glGenBuffers(1, &VBO);
 
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-		glBindVertexArray(cubeVAO);
-
-		// position attribute
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
-		// normal attribute
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-		glEnableVertexAttribArray(1);
-
-		// second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
-		unsigned int lightVAO;
-		glGenVertexArrays(1, &lightVAO);
-		glBindVertexArray(lightVAO);
-
-		glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		// note that we update the lamp's position attribute's stride to reflect the updated buffer data
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-		glEnableVertexAttribArray(0);
+		VertexArray l_va;
+		VertexBuffer l_vb(vertices, sizeof(vertices) * sizeof(float));
+		VertexBufferLayout l_layout;
+		l_layout.Push<float>(3);
+		l_layout.Push<float>(3);
+		l_va.AddBuffer(l_vb, l_layout);
 
 
 		VertexArray va;
@@ -414,11 +401,9 @@ int main(void)
 			model = glm::scale(model, glm::vec3(0.3f)); // a smaller cube
 			light_shader.setUniformMat4f("model", model);
 
-			glBindVertexArray(lightVAO);
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-			
-
+			renderer.Draw(l_va, 0, sizeof(vertices) / sizeof(float) / 6, light_shader);
 			renderer.Draw(va, ib, shader);
+			
 
 			/* Swap front and back buffers */
 			glfwSwapBuffers(window);
