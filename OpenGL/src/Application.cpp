@@ -260,10 +260,6 @@ int main(void)
 		std::cout << std::endl;
 		//print(positions, indices, ZData.nrows, ZData.ncols);
 
-		////// blend for transparency-alpha channels //////
-		/*GLCall(glEnable(GL_BLEND));
-		GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));*/
-		////// blend for transparency-alpha channels //////
 
 		float vertices[] = {
 			 0.0f,  0.0f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -321,7 +317,7 @@ int main(void)
 		VertexBuffer vb(positions.data(), positions.size() * sizeof(float));
 
 		VertexBufferLayout layout;
-		layout.Push<float>(dimension);
+		layout.Push<float>(3);
 		layout.Push<float>(4);
 		layout.Push<float>(2);
 		layout.Push<float>(3);
@@ -383,15 +379,6 @@ int main(void)
 			shader.setUniformMat4f("model", model);
 
 
-			//shader.Bind();
-
-			// pass projection matrix to shader (note that in this case it could change every frame)
-			shader.setUniformMat4f("projection", projection);
-
-			// camera/view transformation
-			shader.setUniformMat4f("view", view);
-
-
 			// also draw the lamp object
 			light_shader.Bind();
 			light_shader.setUniformMat4f("projection", projection);
@@ -401,7 +388,18 @@ int main(void)
 			model = glm::scale(model, glm::vec3(0.3f)); // a smaller cube
 			light_shader.setUniformMat4f("model", model);
 
-			renderer.Draw(l_va, 0, sizeof(vertices) / sizeof(float) / 6, light_shader);
+
+			//// moving light source
+			//currentFrame = glfwGetTime();
+			//deltaTime = currentFrame - lastFrame;
+			//lastFrame = currentFrame;
+			//renderer.Clear();
+			//lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+			//lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
+			//// moving light source
+
+
+			renderer.Draw(l_va, 0, sizeof(vertices) / l_layout.GetStride(), light_shader);
 			renderer.Draw(va, ib, shader);
 			
 

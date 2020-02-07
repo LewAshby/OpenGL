@@ -1,7 +1,7 @@
 #shader vertex
 #version 330 core
 
-layout (location = 0) in vec4 position;
+layout (location = 0) in vec3 position;
 layout(location = 1) in vec4 color;
 layout (location = 2) in vec2 texCoord;
 layout(location = 3) in vec3 normal;
@@ -17,10 +17,10 @@ uniform mat4 projection;
 
 void main()
 {
-   gl_Position = projection * view * model * position;
+   gl_Position = projection * view * model * vec4(position, 1.0f);
    ourColor = color;
    v_TexCoord = texCoord;
-   FragPos = vec3(model * position); // since lighting is evaluated in world space
+   FragPos = vec3(model * vec4(position, 1.0f)); // since lighting is evaluated in world space
    Normal = mat3(transpose(inverse(model))) * normal;
 };
 
