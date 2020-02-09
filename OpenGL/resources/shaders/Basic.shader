@@ -19,7 +19,7 @@ uniform mat4 projection;
 
 void main()
 {
-   FragPos = vec3(model * vec4(position.x, position.y + lavaH, position.z, 1.0f)); // since lighting is evaluated in world space
+   FragPos = vec3(model * vec4(position.x, position.y + lavaH, position.z, 1.0f)); 
    gl_Position = projection * view * vec4(FragPos, 1.0);
    ourColor = color;
    v_TexCoord = texCoord;

@@ -101,7 +101,7 @@ int main(void)
 
 	{
 		std::vector<float> positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.values, ZData.cellsize, LData.values);
-		std::vector<unsigned int> indices = calculatePositions(ZData.nrows, ZData.ncols);
+		std::vector<unsigned int> indices = calculatePositions(ZData.nrows, ZData.ncols, ZData.values);
 		calculateNormal(positions, indices, 13, 10);
 
 		std::cout << std::endl;

@@ -111,15 +111,16 @@ static std::vector<float> calculateVertices(const unsigned int rows, const unsig
 	return positions;
 }
 
-static std::vector<unsigned int> calculatePositions(const unsigned int rows, const unsigned int columns)
+static std::vector<unsigned int> calculatePositions(const unsigned int rows, const unsigned int columns, const std::vector<float> z)
 {
 	std::vector<unsigned int> positions;
+
+	int h = 0;
 
 	for (unsigned int i = 0; i < rows - 1; i++)
 	{
 		for (unsigned int j = 0; j < columns - 1; j++)
 		{
-
 			positions.push_back(i * columns + j);
 			positions.push_back(i * columns + j + 1);
 			positions.push_back((i + 1) * columns + j + 1);
