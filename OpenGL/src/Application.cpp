@@ -24,6 +24,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "camera.h"
+#include "VertexCreation.h"
+
+const int dimension = 3;
+
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -34,8 +39,16 @@ void processInput(GLFWwindow* window);
 const unsigned int SCR_WIDTH = 1024;
 const unsigned int SCR_HEIGHT = 1024;
 
+FileData ZData = readFile("resources/dem.asc");
+FileData LData = readFile("resources/source.asc");
+
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+//Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float camX = ZData.xllcorner + (ZData.nrows - 1) * ZData.cellsize / 2;
+float camY = sqrt(ZData.nrows * ZData.ncols) * ZData.cellsize * 1.5;
+float camZ = ZData.yllcorner + ZData.nrows * ZData.cellsize / 2;
+Camera camera(glm::vec3(camX, camY, camZ), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, -40.0f);
+
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -46,169 +59,11 @@ float lastFrame = 0.0f;
 
 // lighting
 ///glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-glm::vec3 lightPos(0.5f, 1.0f, 2.0f);
+float lightX = ZData.xllcorner + ZData.ncols / 2 * ZData.cellsize;
+float lightY = sqrt(ZData.nrows * ZData.ncols) * ZData.cellsize * 1.5;
+float lightZ = ZData.yllcorner + ZData.nrows / 2 * ZData.cellsize;
+glm::vec3 lightPos = glm::vec3(lightX, lightY, lightZ);
 
-
-
-const int dimension = 3;
-
-struct FileData
-{
-	unsigned int ncols;
-	unsigned int nrows;
-	float cellsize;
-	std::vector<float> values;
-	int NoDataValue;
-
-};
-
-static std::vector<float> calculateVertices(const unsigned int rows, const unsigned int columns, const unsigned int dimention, 
-	const std::vector<float> z, float offset, const std::vector<float> lava)
-{
-	std::vector<float> positions;
-	float min = *min_element(z.begin(), z.end());
-	float max = *max_element(z.begin(), z.end());
-
-	int k = 0;
-	float r = 0.4f;
-	float g = 0.4f;
-	float b = 0.4f;
-	float a = 1.0f;
-
-	for (unsigned int i = 0; i < rows; i++)
-	{
-		for (unsigned int j = 0; j < columns; j++)
-		{
-			positions.push_back(float(j) / float(columns));		// x-point coordinate
-			positions.push_back(float(i) / float(rows));		// y-point coordinate
-			if (dimention == 3) 
-				positions.push_back((z[k]-min) / (max - min));	// z-point coordinate
-
-			g = (z[k] - min) / (max - min);
-			b = (z[k] - min) / (max - min);
-			if (lava[k] > 0) {
-				r = 0.4f;
-				g = 0.06f;
-				b = 0.06f;
-			}
-			else
-				r = (z[k] - min) / (max - min);
-
-			positions.push_back(r);								// r - color
-			positions.push_back(g);								// g - color	
-			positions.push_back(b);								// b - color
-			positions.push_back(a);								// a - color
-
-			positions.push_back(float(j) / float(columns));		// x-texture coordinate
-			positions.push_back(float(i) / float(rows));		// y-texture coordinate
-
-			positions.push_back(float(j) / float(columns));		
-			positions.push_back(float(i) / float(rows));
-			positions.push_back((z[k]-min) / (max - min));
-
-			k++;
-		}
-	}
-
-	return positions;
-}
-
-static std::vector<unsigned int> calculatePositions(const unsigned int rows, const unsigned int columns)
-{
-	std::vector<unsigned int> positions;
-
-	for (unsigned int i = 0; i < rows - 1; i++)
-	{
-		for (unsigned int j = 0; j < columns - 1; j++)
-		{
-
-			positions.push_back(i * columns + j);
-			positions.push_back(i * columns + j + 1);
-			positions.push_back((i + 1) * columns + j + 1);
-			positions.push_back((i + 1) * columns + j + 1);
-			positions.push_back((i + 1) * columns + j);
-			positions.push_back(i * columns + j);
-		}
-	}
-
-	return positions;
-}
-
-static void print(std::vector<float> positions, std::vector<unsigned int> indices, int rows, int columns)
-{
-	std::cout << "Vertex positions: " << std::endl;
-	for (int i = 0; i < positions.size(); i += 5)
-	{
-		std::cout << std::fixed;
-		std::cout << std::setprecision(6);
-		std::cout << float(positions[i]) << "f, ";
-		std::cout << float(positions[i + 1]) << "f, ";
-		std::cout << float(positions[i + 2]) << "f, ";
-		std::cout << float(positions[i + 3]) << "f, ";
-		std::cout << float(positions[i + 4]) << "f, ";
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;
-
-	std::ofstream myfile;
-	myfile.open("indices.txt");
-	std::cout << "Vertex indices: " << std::endl;
-	for (int i = 0; i < indices.size(); i += 3)
-	{
-		std::cout << std::fixed;
-		std::cout << std::setprecision(6);
-		std::cout << indices[i] << ", ";
-		std::cout << indices[i + 1] << ", ";
-		std::cout << indices[i + 2] << ", ";
-		std::cout << std::endl;
-	}
-	std::cout << std::endl;
-	myfile.close();
-}
-
-static FileData readFile(std::string path)
-{
-	std::ifstream infileAlt(path);
-	FileData data;
-	std::vector<float> alt_temp;
-	std::string line, l1, l2, temp;
-	int flag = 0;
-	
-	while (std::getline(infileAlt, line))
-	{
-		if (flag == 1)
-		{
-			std::stringstream ss(line);
-			while (ss >> temp)
-				data.values.push_back(std::stof(temp));
-			for (int i = data.values.size() - 1; i >= 0; i--)
-				alt_temp.push_back(data.values[i]);
-			data.values.clear();
-		}
-		else
-		{
-			std::stringstream ss(line);
-			ss >> l1 >> l2;
-			if (l1 == "ncols")
-				data.ncols = std::stoi(l2);
-			if (l1 == "nrows")
-				data.nrows = std::stoi(l2);
-				//data.nrows = data.ncols;
-			if (l1 == "cellsize")
-				data.cellsize = std::stof(l2);
-			if (l1 == "NODATA_value")
-			{
-				data.NoDataValue = std::stoi(l2);
-				flag = 1;
-			}
-		}
-	}
-
-	for (int i = alt_temp.size()-1; i >= 0; i--)
-		data.values.push_back(alt_temp[i]);
-
-	return data;
-}
 
 int main(void)
 {
@@ -245,94 +100,33 @@ int main(void)
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
 	{
-
-		FileData ZData = readFile("resources/altitudes.dat");
-		FileData LData = readFile("resources/lava.dat");
-		FileData TData = readFile("resources/temperature.dat");
-		for (int i = 0; i < ZData.values.size(); i++)
-			ZData.values[i] += LData.values[i];
 		std::vector<float> positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.values, ZData.cellsize, LData.values);
 		std::vector<unsigned int> indices = calculatePositions(ZData.nrows, ZData.ncols);
+		calculateNormal(positions, indices, 13, 10);
 
 		std::cout << std::endl;
 		std::cout << "Rows: " << ZData.nrows  << std::endl;
 		std::cout << "Columns: " << ZData.ncols << std::endl;
 		std::cout << std::endl;
-		//print(positions, indices, ZData.nrows, ZData.ncols);
-
-
-		float vertices[] = {
-			 0.0f,  0.0f, -0.5f,  0.0f,  0.0f, -1.0f,
-			 1.0f,  0.0f, -0.5f,  0.0f,  0.0f, -1.0f,
-			 1.0f,  1.0f, -0.5f,  0.0f,  0.0f, -1.0f,
-			 1.0f,  1.0f, -0.5f,  0.0f,  0.0f, -1.0f,
-			 0.0f,  1.0f, -0.5f,  0.0f,  0.0f, -1.0f,
-			 0.0f,  0.0f, -0.5f,  0.0f,  0.0f, -1.0f,
-
-			 0.0f,  0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
-			 1.0f,  0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
-			 1.0f,  1.0f,  0.5f,  0.0f,  0.0f,  1.0f,
-			 1.0f,  1.0f,  0.5f,  0.0f,  0.0f,  1.0f,
-			 0.0f,  1.0f,  0.5f,  0.0f,  0.0f,  1.0f,
-			 0.0f,  0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
-
-			 0.0f,  1.0f,  0.5f, -1.0f,  0.0f,  0.0f,
-			 0.0f,  1.0f, -0.5f, -1.0f,  0.0f,  0.0f,
-			 0.0f,  0.0f, -0.5f, -1.0f,  0.0f,  0.0f,
-			 0.0f,  0.0f, -0.5f, -1.0f,  0.0f,  0.0f,
-			 0.0f,  0.0f,  0.5f, -1.0f,  0.0f,  0.0f,
-			 0.0f,  1.0f,  0.5f, -1.0f,  0.0f,  0.0f,
-
-			 1.0f,  1.0f,  0.5f,  1.0f,  0.0f,  0.0f,
-			 1.0f,  1.0f, -0.5f,  1.0f,  0.0f,  0.0f,
-			 1.0f,  0.0f, -0.5f,  1.0f,  0.0f,  0.0f,
-			 1.0f,  0.0f, -0.5f,  1.0f,  0.0f,  0.0f,
-			 1.0f,  0.0f,  0.5f,  1.0f,  0.0f,  0.0f,
-			 1.0f,  1.0f,  0.5f,  1.0f,  0.0f,  0.0f,
-
-			 0.0f,  0.0f, -0.5f,  0.0f, -1.0f,  0.0f,
-			 1.0f,  0.0f, -0.5f,  0.0f, -1.0f,  0.0f,
-			 1.0f,  0.0f,  0.5f,  0.0f, -1.0f,  0.0f,
-			 1.0f,  0.0f,  0.5f,  0.0f, -1.0f,  0.0f,
-			 0.0f,  0.f,  0.5f,  0.0f, -1.0f,  0.0f,
-			 0.0f,  0.0f, -0.5f,  0.0f, -1.0f,  0.0f,
-
-			 0.0f,  1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
-			 1.0f,  1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
-			 1.0f,  1.0f,  0.5f,  0.0f,  1.0f,  0.0f,
-			 1.0f,  1.0f,  0.5f,  0.0f,  1.0f,  0.0f,
-			 0.0f,  1.0f,  0.5f,  0.0f,  1.0f,  0.0f,
-			 0.0f,  1.0f, -0.5f,  0.0f,  1.0f,  0.0f
-		};
-
-		VertexArray l_va;
-		VertexBuffer l_vb(vertices, sizeof(vertices) * sizeof(float));
-		VertexBufferLayout l_layout;
-		l_layout.Push<float>(3);
-		l_layout.Push<float>(3);
-		l_va.AddBuffer(l_vb, l_layout);
-
 
 		VertexArray va;
 		VertexBuffer vb(positions.data(), positions.size() * sizeof(float));
 
 		VertexBufferLayout layout;
-		layout.Push<float>(3);
-		layout.Push<float>(4);
-		layout.Push<float>(2);
-		layout.Push<float>(3);
+		layout.Push<float>(dimension);	//dimension
+		layout.Push<float>(1);			//lava altitude
+		layout.Push<float>(4);			//color
+		layout.Push<float>(2);			//texture
+		layout.Push<float>(3);			//normal
 		va.AddBuffer(vb, layout);
 
 		IndexBuffer ib(indices.data(), indices.size() * sizeof(unsigned int));
 
 		ShaderHandler shader("resources/shaders/Basic.shader");
-		ShaderHandler light_shader("resources/shaders/Light.shader");
 		shader.Bind();
-		//shader.setUniform4f("u_Color", 0.4f, 0.4f, 0.4f, 1.0f);
 
 		Texture texture("resources/textures/texture.png");
 		texture.Bind();
-		shader.setUniform1i("u_Texture", 0);
 
 		va.Unbind();
 		vb.Unbind();
@@ -360,16 +154,22 @@ int main(void)
 
 			/* Render here */
 			renderer.Clear();
-
-
+			
 			// be sure to activate shader when setting uniforms/drawing objects
 			shader.Bind();
-			shader.setUniformVec3("lightColor", 1.0f, 1.0f, 1.0f);
-			shader.setUniformVec3("lightPos", lightPos);
+			shader.setUniformVec3("light.position", lightPos);
 			shader.setUniformVec3("viewPos", camera.Position);
 
+			// light properties
+			glm::vec3 lightColor = glm::vec3(0.5f);
+			glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f); // decrease the influence
+			glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+			shader.setUniformVec3("light.ambient", ambientColor);
+			shader.setUniformVec3("light.diffuse", diffuseColor);
+			shader.setUniformVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
 			// view/projection transformations
-			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+			glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100000000000.0f);
 			glm::mat4 view = camera.GetViewMatrix();
 			shader.setUniformMat4f("projection", projection);
 			shader.setUniformMat4f("view", view);
@@ -378,28 +178,6 @@ int main(void)
 			glm::mat4 model = glm::mat4(1.0f);
 			shader.setUniformMat4f("model", model);
 
-
-			// also draw the lamp object
-			light_shader.Bind();
-			light_shader.setUniformMat4f("projection", projection);
-			light_shader.setUniformMat4f("view", view);
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, lightPos);
-			model = glm::scale(model, glm::vec3(0.3f)); // a smaller cube
-			light_shader.setUniformMat4f("model", model);
-
-
-			//// moving light source
-			//currentFrame = glfwGetTime();
-			//deltaTime = currentFrame - lastFrame;
-			//lastFrame = currentFrame;
-			//renderer.Clear();
-			//lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-			//lightPos.y = sin(glfwGetTime() / 2.0f) * 1.0f;
-			//// moving light source
-
-
-			renderer.Draw(l_va, 0, sizeof(vertices) / l_layout.GetStride(), light_shader);
 			renderer.Draw(va, ib, shader);
 			
 
@@ -425,13 +203,13 @@ void processInput(GLFWwindow* window)
 		glfwSetWindowShouldClose(window, true);
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.ProcessKeyboard(FORWARD, deltaTime);
+		camera.ProcessKeyboard(FORWARD, deltaTime * 1000);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera.ProcessKeyboard(BACKWARD, deltaTime);
+		camera.ProcessKeyboard(BACKWARD, deltaTime * 1000);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera.ProcessKeyboard(LEFT, deltaTime);
+		camera.ProcessKeyboard(LEFT, deltaTime * 1000);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera.ProcessKeyboard(RIGHT, deltaTime);
+		camera.ProcessKeyboard(RIGHT, deltaTime * 1000);
 	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
