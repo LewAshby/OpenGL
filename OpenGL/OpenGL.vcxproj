@@ -376,6 +376,7 @@
     <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\ShaderHandler.h" />
     <ClInclude Include="src\Texture.h" />
+    <ClInclude Include="src\vendor\flow.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_vector_relational.hpp" />

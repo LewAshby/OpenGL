@@ -25,10 +25,48 @@
 
 #include "camera.h"
 #include "VertexCreation.h"
+#include "flow.h"
 
 const int dimension = 3;
 
+std::vector<std::vector<double>> So;
+std::vector<double*> ptrsSo;
+double* SoNew[5];
+Neighborhood neighborhood;
 
+void init(std::vector<std::vector<double>>& So, unsigned int r, unsigned int c)
+{
+	std::vector<double> t;
+	So.push_back(t);
+	for (int n = 1; n < 5; n++)
+	{
+		So.push_back(t);
+		for (int i = 0; i < r; i++)
+		{
+			for (int j = 0; j < c; j++)
+			{
+				So[n].push_back(0.0);
+			}
+		}
+	}
+	for (auto& vec : So)
+	{
+		ptrsSo.push_back(vec.data());
+	}
+}
+
+void init1(int r, int c, double* M[])
+{
+	M[0] = NULL;
+	for (int n = 1; n < VON_NEUMANN_NEIGHBORS; n++)
+	{
+		M[n] = (double*)malloc(sizeof(double) * r * c);
+
+		for (int i = 0; i < r; i++)
+			for (int j = 0; j < c; j++)
+				set(M[n], c, i, j, 0.0);
+	}
+}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -39,8 +77,8 @@ void processInput(GLFWwindow* window);
 const unsigned int SCR_WIDTH = 1024;
 const unsigned int SCR_HEIGHT = 1024;
 
-FileData ZData = readFile("resources/dem.asc");
-FileData LData = readFile("resources/source.asc");
+FileData ZData = readFile("resources/altitudes.dat");
+FileData LData = readFile("resources/lava.dat");
 
 // camera
 //Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -65,21 +103,27 @@ float lightZ = ZData.yllcorner + ZData.nrows / 2 * ZData.cellsize;
 glm::vec3 lightPos = glm::vec3(lightX, lightY, lightZ);
 
 
+std::vector<float> positions;
+std::vector<unsigned int> indices;
+std::vector<double>Z1(ZData.values.begin(), ZData.values.end());
+std::vector<double>L1(LData.values.begin(), LData.values.end());
+
+
 int main(void)
 {
-    GLFWwindow* window;
+	GLFWwindow* window;
 
-    /* Initialize the library */
-    if (!glfwInit())
-        return -1;
+	/* Initialize the library */
+	if (!glfwInit())
+		return -1;
 
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Flow FLow", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
+	/* Create a windowed mode window and its OpenGL context */
+	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Flow FLow", NULL, NULL);
+	if (!window)
+	{
+		glfwTerminate();
+		return -1;
+	}
 
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -89,8 +133,8 @@ int main(void)
 	// tell GLFW to capture our mouse
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
+	/* Make the window's context current */
+	glfwMakeContextCurrent(window);
 
 	glfwSwapInterval(1);
 
@@ -100,12 +144,14 @@ int main(void)
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
 	{
-		std::vector<float> positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.values, ZData.cellsize, LData.values);
-		std::vector<unsigned int> indices = calculatePositions(ZData.nrows, ZData.ncols, ZData.values);
+		positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.values, ZData.cellsize, LData.values);
+		indices = calculatePositions(ZData.nrows, ZData.ncols, ZData.values);
 		calculateNormal(positions, indices, 13, 10);
+		//init(So, ZData.nrows, ZData.ncols);
+		init1(ZData.nrows, ZData.ncols, SoNew);
 
 		std::cout << std::endl;
-		std::cout << "Rows: " << ZData.nrows  << std::endl;
+		std::cout << "Rows: " << ZData.nrows << std::endl;
 		std::cout << "Columns: " << ZData.ncols << std::endl;
 		std::cout << std::endl;
 
@@ -139,6 +185,7 @@ int main(void)
 		float increment = 0.5f;
 		/* Loop until the user closes the window */
 
+		int steps = 1000;
 		while (!glfwWindowShouldClose(window))
 		{
 
@@ -153,8 +200,11 @@ int main(void)
 			processInput(window);
 
 			/* Render here */
-			renderer.Clear();
-			
+			//renderer.Clear();
+
+			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 			// be sure to activate shader when setting uniforms/drawing objects
 			shader.Bind();
 			shader.setUniformVec3("light.position", lightPos);
@@ -179,7 +229,22 @@ int main(void)
 			shader.setUniformMat4f("model", model);
 
 			renderer.Draw(va, ib, shader);
-			
+
+			va.Bind();
+
+			if (steps > 0)
+			{
+				// lava flow
+				
+				globalTransitionFunction(Z1.data(), L1.data(), SoNew, 0.75, ZData.nrows, ZData.ncols, neighborhood, ZData.NoDataValue);
+				resetNormals(positions, ZData.nrows * ZData.ncols, 13, 10);
+				calculateNormal(positions, indices, 13, 10);				
+				updateLava(positions, L1, ZData.nrows * ZData.ncols, 13, 3);
+
+				steps--;
+
+			}
+			vb.UpdateData(positions.data(), positions.size() * sizeof(float));
 
 			/* Swap front and back buffers */
 			glfwSwapBuffers(window);
@@ -189,8 +254,8 @@ int main(void)
 		}
 
 	}
-    glfwTerminate();
-    return 0;
+	glfwTerminate();
+	return 0;
 }
 
 

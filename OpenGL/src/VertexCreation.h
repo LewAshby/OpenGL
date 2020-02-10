@@ -202,3 +202,21 @@ static void calculateNormal(std::vector<float>& vertices, std::vector<unsigned i
 		}
 	}
 }
+
+
+static void resetNormals(std::vector<float>& vertices, unsigned int n, unsigned int vSize, unsigned int offset)
+{
+	for (int i = 0; i < n; i++)
+	{
+		vertices[i * vSize + offset] = 0.0f;
+		vertices[i * vSize + offset + 1] = 0.0f;
+		vertices[i * vSize + offset + 2] = 0.0f;
+
+	}
+}
+
+static void updateLava(std::vector<float>& vertices, std::vector<double> lava, unsigned int n, unsigned int vSize, unsigned int offset)
+{
+	for (int i = 0; i < n; i++)
+		vertices[i * vSize + offset] = float(lava[i]*0.2f);
+}
