@@ -1,17 +1,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <string>
-#include <sstream>
-
-#include <vector>
-#include <fstream>
-#include <iterator>
-#include <algorithm>
-
+#include "globals.h"
+#include "openClExecutor.h"
 #include "Renderer.h"
 #include "VertexBuffer.h"
 #include "VertexBufferLayout.h"
@@ -27,33 +18,12 @@
 #include "VertexCreation.h"
 #include "flow.h"
 
+
 const int dimension = 3;
 
-std::vector<std::vector<double>> So;
-std::vector<double*> ptrsSo;
 double* SoNew[5];
 Neighborhood neighborhood;
 
-void init(std::vector<std::vector<double>>& So, unsigned int r, unsigned int c)
-{
-	std::vector<double> t;
-	So.push_back(t);
-	for (int n = 1; n < 5; n++)
-	{
-		So.push_back(t);
-		for (int i = 0; i < r; i++)
-		{
-			for (int j = 0; j < c; j++)
-			{
-				So[n].push_back(0.0);
-			}
-		}
-	}
-	for (auto& vec : So)
-	{
-		ptrsSo.push_back(vec.data());
-	}
-}
 
 void init1(int r, int c, double* M[])
 {
@@ -105,13 +75,17 @@ glm::vec3 lightPos = glm::vec3(lightX, lightY, lightZ);
 
 std::vector<float> positions;
 std::vector<unsigned int> indices;
-std::vector<double>Z1(ZData.values.begin(), ZData.values.end());
-std::vector<double>L1(LData.values.begin(), LData.values.end());
+std::vector<double> Z1(ZData.values.begin(), ZData.values.end());
+std::vector<double> H1(LData.values.begin(), LData.values.end());
+
 
 
 int main(void)
 {
 	GLFWwindow* window;
+
+	Z = Z1;
+	H = H1;
 
 	/* Initialize the library */
 	if (!glfwInit())
@@ -147,7 +121,7 @@ int main(void)
 		positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.values, ZData.cellsize, LData.values);
 		indices = calculatePositions(ZData.nrows, ZData.ncols, ZData.values);
 		calculateNormal(positions, indices, 13, 10);
-		//init(So, ZData.nrows, ZData.ncols);
+
 		init1(ZData.nrows, ZData.ncols, SoNew);
 
 		std::cout << std::endl;
@@ -186,6 +160,14 @@ int main(void)
 		/* Loop until the user closes the window */
 
 		int steps = 1000;
+		for (int n = 1; n < 5; n++)
+		{
+			So[n] = (double*)malloc(sizeof(double) * ZData.nrows * ZData.ncols);
+
+			for (int i = 0; i < ZData.nrows; i++)
+				for (int j = 0; j < ZData.ncols; j++)
+					So[n][i * ZData.ncols + j] = 0.0f;
+		}
 		while (!glfwWindowShouldClose(window))
 		{
 
@@ -236,10 +218,14 @@ int main(void)
 			{
 				// lava flow
 				
-				globalTransitionFunction(Z1.data(), L1.data(), SoNew, 0.75, ZData.nrows, ZData.ncols, neighborhood, ZData.NoDataValue);
+				//globalTransitionFunction(Z1.data(), H.data(), SoNew, 0.75, ZData.nrows, ZData.ncols, neighborhood, ZData.NoDataValue);
+				std::vector<double> temp = H;
+				run(ZData.nrows, ZData.ncols, 5, ZData.NoDataValue);
+				/*if (temp == H)
+					std::cout << "spnveionvoie" << std::endl;*/
 				resetNormals(positions, ZData.nrows * ZData.ncols, 13, 10);
 				calculateNormal(positions, indices, 13, 10);				
-				updateLava(positions, L1, ZData.nrows * ZData.ncols, 13, 3);
+				updateLava(positions, H, ZData.nrows * ZData.ncols, 13, 3);
 
 				steps--;
 

@@ -18,7 +18,7 @@ struct FileData
 	float yllcorner;
 	float cellsize;
 	std::vector<float> values;
-	int NoDataValue;
+	float NoDataValue;
 
 };
 
@@ -59,7 +59,7 @@ static FileData readFile(std::string path)
 				data.cellsize = std::stof(l2);
 			if (l1 == "NODATA_value")
 			{
-				data.NoDataValue = std::stoi(l2);
+				data.NoDataValue = std::stof(l2);
 				flag = 1;
 			}
 		}
@@ -218,5 +218,6 @@ static void resetNormals(std::vector<float>& vertices, unsigned int n, unsigned 
 static void updateLava(std::vector<float>& vertices, std::vector<double> lava, unsigned int n, unsigned int vSize, unsigned int offset)
 {
 	for (int i = 0; i < n; i++)
-		vertices[i * vSize + offset] = float(lava[i]*0.2f);
+		if (lava[i] > 0 && lava[i] < 15)
+			vertices[i * vSize + offset] = float(lava[i]);
 }

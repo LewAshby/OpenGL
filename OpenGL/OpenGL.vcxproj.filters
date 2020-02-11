@@ -446,6 +446,10 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="resources\shaders\Light.shader" />
+    <None Include="resources\lava.dat" />
+    <None Include="resources\kernels\kernel1.cl" />
+    <None Include="resources\kernels\kernel2.cl" />
+    <None Include="resources\kernels\kernel3.cl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Renderer.h">
@@ -1205,6 +1209,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\vendor\flow.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vendor\camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\openClExecutor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vendor\cl.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vendor\err_code.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vendor\util.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\globals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
