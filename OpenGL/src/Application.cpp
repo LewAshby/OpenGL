@@ -20,13 +20,13 @@
 
 
 const int dimension = 3;
-
-double* SoNew[5];
 Neighborhood neighborhood;
 
 
-void init1(int r, int c, double* M[])
+void initSo(int r, int c, double* M[])
 {
+	SoSize = nrows * ncols * VON_NEUMANN_NEIGHBORS;
+	lSo.resize(SoSize);
 	M[0] = NULL;
 	for (int n = 1; n < VON_NEUMANN_NEIGHBORS; n++)
 	{
@@ -43,18 +43,14 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
-// settings
-const unsigned int SCR_WIDTH = 1024;
-const unsigned int SCR_HEIGHT = 1024;
-
 FileData ZData = readFile("resources/altitudes.dat");
 FileData LData = readFile("resources/lava.dat");
 
 // camera
 //Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float camX = ZData.xllcorner + (ZData.nrows - 1) * ZData.cellsize / 2;
-float camY = sqrt(ZData.nrows * ZData.ncols) * ZData.cellsize * 1.5;
-float camZ = ZData.yllcorner + ZData.nrows * ZData.cellsize / 2;
+float camX = xllcorner + (nrows - 1) * cellsize / 2;
+float camY = sqrt(nrows * ncols) * cellsize * 1.5;
+float camZ = yllcorner + nrows * cellsize / 2;
 Camera camera(glm::vec3(camX, camY, camZ), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, -40.0f);
 
 float lastX = SCR_WIDTH / 2.0f;
@@ -67,9 +63,9 @@ float lastFrame = 0.0f;
 
 // lighting
 ///glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-float lightX = ZData.xllcorner + ZData.ncols / 2 * ZData.cellsize;
-float lightY = sqrt(ZData.nrows * ZData.ncols) * ZData.cellsize * 1.5;
-float lightZ = ZData.yllcorner + ZData.nrows / 2 * ZData.cellsize;
+float lightX = xllcorner + ncols / 2 * cellsize;
+float lightY = sqrt(nrows * ncols) * cellsize * 1.5;
+float lightZ = yllcorner + nrows / 2 * cellsize;
 glm::vec3 lightPos = glm::vec3(lightX, lightY, lightZ);
 
 
@@ -92,7 +88,7 @@ int main(void)
 		return -1;
 
 	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Flow FLow", NULL, NULL);
+	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Lava FLow", NULL, NULL);
 	if (!window)
 	{
 		glfwTerminate();
@@ -122,7 +118,7 @@ int main(void)
 		indices = calculatePositions(ZData.nrows, ZData.ncols, ZData.values);
 		calculateNormal(positions, indices, 13, 10);
 
-		init1(ZData.nrows, ZData.ncols, SoNew);
+		initSo(ZData.nrows, ZData.ncols, So);
 
 		std::cout << std::endl;
 		std::cout << "Rows: " << ZData.nrows << std::endl;
@@ -159,15 +155,7 @@ int main(void)
 		float increment = 0.5f;
 		/* Loop until the user closes the window */
 
-		int steps = 1000;
-		for (int n = 1; n < 5; n++)
-		{
-			So[n] = (double*)malloc(sizeof(double) * ZData.nrows * ZData.ncols);
-
-			for (int i = 0; i < ZData.nrows; i++)
-				for (int j = 0; j < ZData.ncols; j++)
-					So[n][i * ZData.ncols + j] = 0.0f;
-		}
+		int steps = 4000;
 		while (!glfwWindowShouldClose(window))
 		{
 
@@ -182,10 +170,7 @@ int main(void)
 			processInput(window);
 
 			/* Render here */
-			//renderer.Clear();
-
-			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			renderer.Clear();
 
 			// be sure to activate shader when setting uniforms/drawing objects
 			shader.Bind();
@@ -218,13 +203,12 @@ int main(void)
 			{
 				// lava flow
 				
-				//globalTransitionFunction(Z1.data(), H.data(), SoNew, 0.75, ZData.nrows, ZData.ncols, neighborhood, ZData.NoDataValue);
-				std::vector<double> temp = H;
-				run(ZData.nrows, ZData.ncols, 5, ZData.NoDataValue);
+				globalTransitionFunction(Z1.data(), H.data(), So, dumping_factor, ZData.nrows, ZData.ncols, neighborhood, ZData.NoDataValue);
+				//run(nrows, ncols, VON_NEUMANN_NEIGHBORS, NoDataValue);
 
-				resetNormals(positions, ZData.nrows * ZData.ncols, 13, 10);
+				resetNormals(positions, nrows * ncols, 13, 10);
 				calculateNormal(positions, indices, 13, 10);				
-				updateLava(positions, H, ZData.nrows * ZData.ncols, 13, 3);
+				updateLava(positions, H, nrows * ncols, 13, 3);
 
 				steps--;
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "globals.h"
 #include <vector>
 #include <fstream>
 #include <string>
@@ -50,10 +51,8 @@ static FileData readFile(std::string path)
 			if (l1 == "nrows")
 				data.nrows = std::stoi(l2);
 			if (l1 == "xllcorner")
-				//data.xllcorner = std::stof(l2);
 				data.xllcorner = 0.0f;
 			if (l1 == "yllcorner")
-				//data.yllcorner = std::stof(l2);
 				data.yllcorner = 0.0f;
 			if (l1 == "cellsize")
 				data.cellsize = std::stof(l2);
@@ -66,6 +65,11 @@ static FileData readFile(std::string path)
 	}
 	for (int i = alt_temp.size() - 1; i >= 0; i--)
 		data.values.push_back(alt_temp[i]);
+
+	nrows = data.nrows;
+	ncols = data.ncols;
+	cellsize = data.cellsize;
+	NoDataValue = data.NoDataValue;
 
 	return data;
 }
@@ -164,6 +168,8 @@ static void print(std::vector<float> positions, std::vector<unsigned int> indice
 
 static void calculateNormal(std::vector<float>& vertices, std::vector<unsigned int> indices, unsigned int vSize, unsigned int offset)
 {
+	glm::vec3 vec1, vec2, norm;
+
 	for (int i = 0; i < indices.size(); i += 3)
 	{
 		unsigned int tVert1 = indices[i];
@@ -182,8 +188,6 @@ static void calculateNormal(std::vector<float>& vertices, std::vector<unsigned i
 		float tVert3_Y = vertices[tVert3 * vSize + 1];
 		float tVert3_Z = vertices[tVert3 * vSize + 2];
 
-		glm::vec3 vec1, vec2;
-
 		vec1.x = tVert1_X - tVert2_X;
 		vec1.y = tVert1_Y - tVert2_Y;
 		vec1.z = tVert1_Z - tVert2_Z;
@@ -192,17 +196,16 @@ static void calculateNormal(std::vector<float>& vertices, std::vector<unsigned i
 		vec2.y = tVert3_Y - tVert2_Y;
 		vec2.z = tVert3_Z - tVert2_Z;
 
-		glm::vec3 normV = glm::cross(vec1, vec2);
+		norm = glm::cross(vec1, vec2);
 
 		for (int i = 0; i < 3; i++)
 		{
-			vertices[tVert1 * vSize + offset] = normV.x;
-			vertices[tVert1 * vSize + offset + 1] = normV.y;
-			vertices[tVert1 * vSize + offset + 2] = normV.z;
+			vertices[tVert1 * vSize + offset] = norm.x;
+			vertices[tVert1 * vSize + offset + 1] = norm.y;
+			vertices[tVert1 * vSize + offset + 2] = norm.z;
 		}
 	}
 }
-
 
 static void resetNormals(std::vector<float>& vertices, unsigned int n, unsigned int vSize, unsigned int offset)
 {
