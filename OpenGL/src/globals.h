@@ -1,6 +1,8 @@
 #pragma once
 
 #include<vector>
+#include "glm/glm.hpp"
+#include "camera.h"
 
 struct FileData
 {
@@ -23,9 +25,9 @@ struct CellCoordinates {
 const unsigned int SCR_WIDTH = 1024;
 const unsigned int SCR_HEIGHT = 1024;
 
-unsigned int nrows;
-unsigned int ncols;
-unsigned int cellsize;
+int nrows;
+int ncols;
+int cellsize;
 float NoDataValue;
 
 float xllcorner = 0;
@@ -52,10 +54,12 @@ Neighborhood neighborhood;
 float cameraX;
 float cameraY;
 float cameraZ;
+Camera camera;
 
 float lightX;
 float lightY;
 float lightZ;
+glm::vec3 lightPos;
 
 bool flag = false;
 bool parallel = false;
