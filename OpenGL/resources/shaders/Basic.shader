@@ -51,6 +51,7 @@ in float lava;
 
 uniform vec3 viewPos;
 uniform Light light;
+uniform float lavaMax;
 
 uniform vec4 u_Color;
 uniform sampler2D u_Texture;
@@ -80,7 +81,7 @@ void main()
 
     vec3 result = ambient + diffuse + specular;
 
-    float thicknessRatio = lava / 15 / 0.2f;
+    float thicknessRatio = lava / lavaMax / 0.2f;
     float RColor = 1.0f;
     float GColor = 0.6 * (1 - thicknessRatio);
     float BColor = 0.0f;

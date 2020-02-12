@@ -17,34 +17,19 @@
 #include "camera.h"
 #include "VertexCreation.h"
 #include "flow.h"
+#include "openClTester.h"
+#include "initProgram.h"
 
 
 const int dimension = 3;
-Neighborhood neighborhood;
-
-
-void initSo(int r, int c, double* M[])
-{
-	SoSize = nrows * ncols * VON_NEUMANN_NEIGHBORS;
-	lSo.resize(SoSize);
-	M[0] = NULL;
-	for (int n = 1; n < VON_NEUMANN_NEIGHBORS; n++)
-	{
-		M[n] = (double*)malloc(sizeof(double) * r * c);
-
-		for (int i = 0; i < r; i++)
-			for (int j = 0; j < c; j++)
-				set(M[n], c, i, j, 0.0);
-	}
-}
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
-FileData ZData = readFile("resources/altitudes.dat");
-FileData LData = readFile("resources/lava.dat");
+//FileData ZData = readFile("resources/altitudes.dat");
+//FileData LData = readFile("resources/lava.dat");
 
 // camera
 //Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -71,17 +56,16 @@ glm::vec3 lightPos = glm::vec3(lightX, lightY, lightZ);
 
 std::vector<float> positions;
 std::vector<unsigned int> indices;
-std::vector<double> Z1(ZData.values.begin(), ZData.values.end());
-std::vector<double> H1(LData.values.begin(), LData.values.end());
 
 
 
-int main(void)
+int main(int argc, char** argv)
 {
-	GLFWwindow* window;
+	if (initProgram(argc, argv) == -1)
+		return 0;
 
-	Z = Z1;
-	H = H1;
+
+	GLFWwindow* window;
 
 	/* Initialize the library */
 	if (!glfwInit())
@@ -118,8 +102,6 @@ int main(void)
 		indices = calculatePositions(ZData.nrows, ZData.ncols, ZData.values);
 		calculateNormal(positions, indices, 13, 10);
 
-		initSo(ZData.nrows, ZData.ncols, So);
-
 		std::cout << std::endl;
 		std::cout << "Rows: " << ZData.nrows << std::endl;
 		std::cout << "Columns: " << ZData.ncols << std::endl;
@@ -155,7 +137,6 @@ int main(void)
 		float increment = 0.5f;
 		/* Loop until the user closes the window */
 
-		int steps = 4000;
 		while (!glfwWindowShouldClose(window))
 		{
 
@@ -191,6 +172,8 @@ int main(void)
 			shader.setUniformMat4f("projection", projection);
 			shader.setUniformMat4f("view", view);
 
+			shader.setUniform1f("lavaMax", lavaMax);
+
 			// world transformation
 			glm::mat4 model = glm::mat4(1.0f);
 			shader.setUniformMat4f("model", model);
@@ -203,12 +186,12 @@ int main(void)
 			{
 				// lava flow
 				
-				globalTransitionFunction(Z1.data(), H.data(), So, dumping_factor, ZData.nrows, ZData.ncols, neighborhood, ZData.NoDataValue);
+				//globalTransitionFunction(Z1.data(), H.data(), So, dumping_factor, nrows, ncols, neighborhood, NoDataValue);
 				//run(nrows, ncols, VON_NEUMANN_NEIGHBORS, NoDataValue);
 
-				resetNormals(positions, nrows * ncols, 13, 10);
+				/*resetNormals(positions, nrows * ncols, 13, 10);
 				calculateNormal(positions, indices, 13, 10);				
-				updateLava(positions, H, nrows * ncols, 13, 3);
+				updateLava(positions, H, nrows * ncols, 13, 3);*/
 
 				steps--;
 

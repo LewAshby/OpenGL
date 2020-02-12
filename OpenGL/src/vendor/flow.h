@@ -72,13 +72,13 @@ At each iteration step, three basic sub-steps (ake kernels, local processes, or 
 
 #define VON_NEUMANN_NEIGHBORS	5
 
-struct CellCoordinates {
-    int i;
-    int j;
-};
-
-//typedef CellCoordinates Neighborhood[VON_NEUMANN_NEIGHBORS];
-using Neighborhood = CellCoordinates[VON_NEUMANN_NEIGHBORS];
+//struct CellCoordinates {
+//    int i;
+//    int j;
+//};
+//
+////typedef CellCoordinates Neighborhood[VON_NEUMANN_NEIGHBORS];
+//using Neighborhood = CellCoordinates[VON_NEUMANN_NEIGHBORS];
 
 //-----------------------------------------------------------------------------
 

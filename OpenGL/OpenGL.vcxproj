@@ -378,7 +378,9 @@
   <ItemGroup>
     <ClInclude Include="src\globals.h" />
     <ClInclude Include="src\IndexBuffer.h" />
+    <ClInclude Include="src\initProgram.h" />
     <ClInclude Include="src\openClExecutor.h" />
+    <ClInclude Include="src\openClTester.h" />
     <ClInclude Include="src\Renderer.h" />
     <ClInclude Include="src\ShaderHandler.h" />
     <ClInclude Include="src\Texture.h" />

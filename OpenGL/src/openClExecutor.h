@@ -37,9 +37,6 @@ void run(int nrows, int ncols, int nneighbors, float NDataValue)
 		mass_balance = cl::Program(context, util::loadProgram("resources/kernels/kernel2.cl"), true);
 		outflow_reset = cl::Program(context, util::loadProgram("resources/kernels/kernel3.cl"), true);
 
-		/*int SoSize = nrows * ncols * nneighbors;
-		std::vector<double> lSo(SoSize);*/
-
 		cl::make_kernel<int, int, float, int, float, cl::Buffer, cl::Buffer, cl::Buffer> kernel1(outflow_computation, "kernel1");
 		cl::make_kernel<int, int, float, int, cl::Buffer, cl::Buffer, cl::Buffer> kernel2(mass_balance, "kernel2");
 		cl::make_kernel<int, int, float, int, cl::Buffer, cl::Buffer> kernel3(outflow_reset, "kernel3");
@@ -78,10 +75,7 @@ void run(int nrows, int ncols, int nneighbors, float NDataValue)
 			SoB
 		);
 
-		//std::vector<double> sss = H;
 		queue.enqueueReadBuffer(hB, CL_TRUE, 0, sizeof(double) * H.size(), &H[0]);
-		/*if (H == sss)
-			std::cout << "akjbciuewbc" << std::endl;*/
 
 		kernel3(
 			cl::EnqueueArgs(queue, cl::NDRange(nrows - 1, ncols - 1)),
@@ -95,11 +89,7 @@ void run(int nrows, int ncols, int nneighbors, float NDataValue)
 
 		queue.finish();
 
-		std::vector<double> temp(nrows * ncols);
-
 		cl::copy(queue, SoB, lSo.begin(), lSo.end());
-		cl::copy(queue, hB, temp.begin(), temp.end());
-
 		
 		int lSoIndex = 0;
 		for (int i = 0; i < nneighbors; i++) {
