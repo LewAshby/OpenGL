@@ -6,8 +6,8 @@ __kernel void kernel2(
 	const int nneighbors,
 	const float noDataValue,
 	__global double* z,
-	__global double* h,
-	__global double* So
+	__global double* hThickness,
+	__global double* sOverflow
 )
 {
 	int i = get_global_id(0);
@@ -44,13 +44,14 @@ __kernel void kernel2(
 		 *  4 |  1
 		 *
 		 */
-		double temph = h[(i * ncols) + j];
-		for (int n = 1; n < nneighbors; n++)
+		double temph = hThickness[(i * ncols) + j];
+		int x;
+		for (int n = 1; n < 5; n++)
 		{
-			int x = nneighbors - n;
-			temph += So[x * (nrows * ncols) + Vi[n] * ncols + Vj[n]];
-			temph -= So[n * (nrows * ncols) + i * ncols + j];
+			x = 5 - n;
+			temph += sOverflow[x * (nrows * ncols) + Vi[n] * ncols + Vj[n]];
+			temph -= sOverflow[n * (nrows * ncols) + i * ncols + j];
 		}
-		h[i * ncols + j] = temph;
+		hThickness[i * ncols + j] = temph;
 	}
 }

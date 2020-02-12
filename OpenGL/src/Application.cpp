@@ -221,8 +221,7 @@ int main(void)
 				//globalTransitionFunction(Z1.data(), H.data(), SoNew, 0.75, ZData.nrows, ZData.ncols, neighborhood, ZData.NoDataValue);
 				std::vector<double> temp = H;
 				run(ZData.nrows, ZData.ncols, 5, ZData.NoDataValue);
-				/*if (temp == H)
-					std::cout << "spnveionvoie" << std::endl;*/
+
 				resetNormals(positions, ZData.nrows * ZData.ncols, 13, 10);
 				calculateNormal(positions, indices, 13, 10);				
 				updateLava(positions, H, ZData.nrows * ZData.ncols, 13, 3);

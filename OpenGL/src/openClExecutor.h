@@ -44,9 +44,9 @@ void run(int nrows, int ncols, int nneighbors, float NDataValue)
 		cl::make_kernel<int, int, float, int, cl::Buffer, cl::Buffer, cl::Buffer> kernel2(mass_balance, "kernel2");
 		cl::make_kernel<int, int, float, int, cl::Buffer, cl::Buffer> kernel3(outflow_reset, "kernel3");
 
-		cl::Buffer hB = cl::Buffer(context, Z.begin(), Z.end(), CL_MEM_READ_WRITE, true);
+		cl::Buffer hB = cl::Buffer(context, H.begin(), H.end(), CL_MEM_READ_WRITE, true);
 		cl::Buffer SoB = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(double) * SoSize);
-		cl::Buffer zB = cl::Buffer(context, H.begin(), H.end(), CL_MEM_READ_ONLY, true);
+		cl::Buffer zB = cl::Buffer(context, Z.begin(), Z.end(), CL_MEM_READ_ONLY, true);
 
 		cl::CommandQueue queue(context);
 
@@ -57,9 +57,9 @@ void run(int nrows, int ncols, int nneighbors, float NDataValue)
 			cl::EnqueueArgs(queue, cl::NDRange(nrows - 1, ncols - 1)),
 			nrows,
 			ncols,
-			NDataValue,
-			nneighbors,
 			0.75,
+			nneighbors,
+			NDataValue,
 			zB,
 			hB,
 			SoB
@@ -71,24 +71,24 @@ void run(int nrows, int ncols, int nneighbors, float NDataValue)
 			cl::EnqueueArgs(queue, cl::NDRange(nrows - 1, ncols - 1)),
 			nrows,
 			ncols,
-			NDataValue,
 			nneighbors,
+			NDataValue,
 			zB,
 			hB,
 			SoB
 		);
 
-		std::vector<double> sss = H;
+		//std::vector<double> sss = H;
 		queue.enqueueReadBuffer(hB, CL_TRUE, 0, sizeof(double) * H.size(), &H[0]);
-		if (H == sss)
-			std::cout << "akjbciuewbc" << std::endl;
+		/*if (H == sss)
+			std::cout << "akjbciuewbc" << std::endl;*/
 
 		kernel3(
 			cl::EnqueueArgs(queue, cl::NDRange(nrows - 1, ncols - 1)),
 			nrows,
 			ncols,
-			NDataValue,
 			nneighbors,
+			NDataValue,
 			zB,
 			SoB
 		);
@@ -100,12 +100,10 @@ void run(int nrows, int ncols, int nneighbors, float NDataValue)
 		cl::copy(queue, SoB, lSo.begin(), lSo.end());
 		cl::copy(queue, hB, temp.begin(), temp.end());
 
-		/*if (H == temp)
-			std::cout << "akjbciuewbc" << std::endl;*/
-
+		
 		int lSoIndex = 0;
 		for (int i = 0; i < nneighbors; i++) {
-			for (int j = 0; j < nrows * ncols; j++) {
+			for (int j = 0; j < 5; j++) {
 				if (i == 0)
 					lSoIndex++;
 				else

@@ -7,8 +7,8 @@ __kernel void kernel1(
 	const int nneighbors,
 	const float noDataValue,
 	__global double* z,
-	__global double* h,
-	__global double* So
+	__global double* hThickness,
+	__global double* sOverflow
 )
 {
 	int i = get_global_id(0);
@@ -49,7 +49,7 @@ __kernel void kernel1(
 			*/
 		double m;
 		// H = z + h, except for the central cell where H = z
-		double H[5];
+		double h[5];
 		// H average over the not eliminated cells
 		double average;
 
@@ -68,10 +68,10 @@ __kernel void kernel1(
 			Note that the index i-1 is justified by the fact that news is a 4-element array,
 			while H is a 5-element array.
 			*/
-		m = h[(i * ncols) + j];
+		m = hThickness[(i * ncols) + j];
 		h[0] = z[(i * ncols) + j];
 		for (int n = 1; n < nneighbors; n++)
-			h[n] = z[(Vi[n] * ncols) + Vj[n]] + h[(Vi[n] * ncols) + Vj[n]];
+			h[n] = z[(Vi[n] * ncols) + Vj[n]] + hThickness[(Vi[n] * ncols) + Vj[n]];
 
 		/*	Here is the main loop of the algorithm. It evaluates the equilibrium condition in the
 		   neighbourhood by computing an average height and eliminating those cells whose total height (H)
@@ -111,7 +111,7 @@ __kernel void kernel1(
 			if (eliminated[n] == false)
 			{
 				flow = (average - h[n]) * dFactor;
-				So[n * (nrows * ncols) + i * ncols + j] = flow;
+				sOverflow[n * (nrows * ncols) + i * ncols + j] = flow;
 			}
 	}
 }
