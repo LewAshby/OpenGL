@@ -48,3 +48,14 @@ std::vector<double> H;
 using Neighborhood = CellCoordinates[VON_NEUMANN_NEIGHBORS];
 
 Neighborhood neighborhood;
+
+float cameraX;
+float cameraY;
+float cameraZ;
+
+float lightX;
+float lightY;
+float lightZ;
+
+bool flag = false;
+bool parallel = false;

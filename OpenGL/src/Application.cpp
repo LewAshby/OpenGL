@@ -28,15 +28,9 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
-//FileData ZData = readFile("resources/altitudes.dat");
-//FileData LData = readFile("resources/lava.dat");
-
 // camera
-//Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-float camX = xllcorner + (nrows - 1) * cellsize / 2;
-float camY = sqrt(nrows * ncols) * cellsize * 1.5;
-float camZ = yllcorner + nrows * cellsize / 2;
-Camera camera(glm::vec3(camX, camY, camZ), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, -40.0f);
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+//Camera camera(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, -40.0f);
 
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
@@ -47,11 +41,8 @@ float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
 
 // lighting
-///glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
-float lightX = xllcorner + ncols / 2 * cellsize;
-float lightY = sqrt(nrows * ncols) * cellsize * 1.5;
-float lightZ = yllcorner + nrows / 2 * cellsize;
-glm::vec3 lightPos = glm::vec3(lightX, lightY, lightZ);
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+//glm::vec3 lightPos = glm::vec3(lightX, lightY, lightZ);
 
 
 std::vector<float> positions;
@@ -63,7 +54,6 @@ int main(int argc, char** argv)
 {
 	if (initProgram(argc, argv) == -1)
 		return 0;
-
 
 	GLFWwindow* window;
 
@@ -101,11 +91,6 @@ int main(int argc, char** argv)
 		positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.values, ZData.cellsize, LData.values);
 		indices = calculatePositions(ZData.nrows, ZData.ncols, ZData.values);
 		calculateNormal(positions, indices, 13, 10);
-
-		std::cout << std::endl;
-		std::cout << "Rows: " << ZData.nrows << std::endl;
-		std::cout << "Columns: " << ZData.ncols << std::endl;
-		std::cout << std::endl;
 
 		VertexArray va;
 		VertexBuffer vb(positions.data(), positions.size() * sizeof(float));
@@ -182,16 +167,17 @@ int main(int argc, char** argv)
 
 			va.Bind();
 
-			if (steps > 0)
+			if (steps > 0 && flag == true)
 			{
 				// lava flow
+				if (parallel)
+					run(nrows, ncols, VON_NEUMANN_NEIGHBORS, NoDataValue);
+				else
+					globalTransitionFunction(Z.data(), H.data(), So, dumping_factor, nrows, ncols, neighborhood, NoDataValue);
 				
-				//globalTransitionFunction(Z1.data(), H.data(), So, dumping_factor, nrows, ncols, neighborhood, NoDataValue);
-				//run(nrows, ncols, VON_NEUMANN_NEIGHBORS, NoDataValue);
-
-				/*resetNormals(positions, nrows * ncols, 13, 10);
+				resetNormals(positions, nrows * ncols, 13, 10);
 				calculateNormal(positions, indices, 13, 10);				
-				updateLava(positions, H, nrows * ncols, 13, 3);*/
+				updateLava(positions, H, nrows * ncols, 13, 3);
 
 				steps--;
 
@@ -231,6 +217,10 @@ void processInput(GLFWwindow* window)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+		flag = true;
+	if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+		flag = false;
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 }

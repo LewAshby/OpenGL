@@ -11,67 +11,56 @@
 #include "glm/glm.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
-
-
 static FileData readFile(std::string path)
 {
 	std::ifstream infileAlt;
-	//infileAlt.exceptions(std::istream::failbit | std::istream::badbit);
-	try
-	{
-		infileAlt.open(path, std::ifstream::in);
-		FileData data;
-		std::vector<float> alt_temp;
-		std::string line, l1, l2, temp;
-		int flag = 0;
+	infileAlt.open(path, std::ifstream::in);
+	FileData data;
+	std::vector<float> alt_temp;
+	std::string line, l1, l2, temp;
+	int flag = 0;
 
-		while (std::getline(infileAlt, line))
+	while (std::getline(infileAlt, line))
+	{
+		if (flag == 1)
 		{
-			if (flag == 1)
+			std::stringstream ss(line);
+			while (ss >> temp)
+				data.values.push_back(std::stof(temp));
+			for (int i = data.values.size() - 1; i >= 0; i--)
+				alt_temp.push_back(data.values[i]);
+			data.values.clear();
+		}
+		else
+		{
+			std::stringstream ss(line);
+			ss >> l1 >> l2;
+			if (l1 == "ncols")
+				data.ncols = std::stoi(l2);
+			if (l1 == "nrows")
+				data.nrows = std::stoi(l2);
+			if (l1 == "xllcorner")
+				data.xllcorner = 0.0f;
+			if (l1 == "yllcorner")
+				data.yllcorner = 0.0f;
+			if (l1 == "cellsize")
+				data.cellsize = std::stof(l2);
+			if (l1 == "NODATA_value")
 			{
-				std::stringstream ss(line);
-				while (ss >> temp)
-					data.values.push_back(std::stof(temp));
-				for (int i = data.values.size() - 1; i >= 0; i--)
-					alt_temp.push_back(data.values[i]);
-				data.values.clear();
-			}
-			else
-			{
-				std::stringstream ss(line);
-				ss >> l1 >> l2;
-				if (l1 == "ncols")
-					data.ncols = std::stoi(l2);
-				if (l1 == "nrows")
-					data.nrows = std::stoi(l2);
-				if (l1 == "xllcorner")
-					data.xllcorner = 0.0f;
-				if (l1 == "yllcorner")
-					data.yllcorner = 0.0f;
-				if (l1 == "cellsize")
-					data.cellsize = std::stof(l2);
-				if (l1 == "NODATA_value")
-				{
-					data.NoDataValue = std::stof(l2);
-					flag = 1;
-				}
+				data.NoDataValue = std::stof(l2);
+				flag = 1;
 			}
 		}
-		for (int i = alt_temp.size() - 1; i >= 0; i--)
-			data.values.push_back(alt_temp[i]);
-
-		nrows = data.nrows;
-		ncols = data.ncols;
-		cellsize = data.cellsize;
-		NoDataValue = data.NoDataValue;
-
-		return data;
 	}
-	catch(const std::exception & e)
-	{
-		std::cout << "Error in file path." << std::endl;
-		exit(0);
-	}
+	for (int i = alt_temp.size() - 1; i >= 0; i--)
+		data.values.push_back(alt_temp[i]);
+
+	nrows = data.nrows;
+	ncols = data.ncols;
+	cellsize = data.cellsize;
+	NoDataValue = data.NoDataValue;
+
+	return data;
 	
 }
 

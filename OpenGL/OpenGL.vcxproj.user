@@ -7,12 +7,12 @@
     <LocalDebuggerEnvironment>
     </LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>altitudes.dat lava.dat 1000 no no</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>resources/altitudes.dat resources/lava.dat 1000 no no</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerEnvironment>
     </LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>altitudes.dat lava.dat 1000 no no</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>resources/altitudes.dat resources/lava.dat 1000 no no</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>
