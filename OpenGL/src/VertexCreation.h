@@ -214,6 +214,6 @@ static void resetNormals(std::vector<float>& vertices, unsigned int n, unsigned 
 static void updateLava(std::vector<float>& vertices, std::vector<double> lava, unsigned int n, unsigned int vSize, unsigned int offset)
 {
 	for (int i = 0; i < n; i++)
-		if (lava[i] > 0 && lava[i] < 15)
+		if (lava[i] > 0 && lava[i] < lavaMax)
 			vertices[i * vSize + offset] = float(lava[i]);
 }

@@ -1,5 +1,8 @@
 #pragma once
 
+#define __CL_ENABLE_EXCEPTIONS
+
+#include "cl.hpp"
 #include<vector>
 #include "glm/glm.hpp"
 #include "camera.h"
@@ -21,6 +24,8 @@ struct CellCoordinates {
 	int j;
 };
 
+const int dimension = 3;
+
 // settings
 const unsigned int SCR_WIDTH = 1024;
 const unsigned int SCR_HEIGHT = 1024;
@@ -35,6 +40,9 @@ float yllcorner = 0;
 
 float lavaMax = 0.0;
 int steps = 4000;
+
+std::vector<float> positions;
+std::vector<unsigned int> indices;
 
 FileData ZData;
 FileData LData;
@@ -63,3 +71,14 @@ glm::vec3 lightPos;
 
 bool flag = false;
 bool parallel = false;
+
+cl::Context context;
+cl::Program outflow_computation;
+cl::Program mass_balance;
+cl::Program outflow_reset;
+
+cl::Buffer hB;
+cl::Buffer SoB;
+cl::Buffer zB;
+
+cl::CommandQueue queue;

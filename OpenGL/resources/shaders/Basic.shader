@@ -81,9 +81,9 @@ void main()
 
     vec3 result = ambient + diffuse + specular;
 
-    float thicknessRatio = lava / lavaMax / 0.2f;
+    float lavaR = lava / lavaMax / 0.4f;
     float RColor = 1.0f;
-    float GColor = 0.6 * (1 - thicknessRatio);
+    float GColor = 0.6 * (1 - lavaR);
     float BColor = 0.0f;
     if (lava < 0.001) {
         RColor = 0.5f;

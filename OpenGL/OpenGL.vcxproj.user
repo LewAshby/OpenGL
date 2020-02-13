@@ -7,12 +7,12 @@
     <LocalDebuggerEnvironment>
     </LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>resources/altitudes.dat resources/lava.dat 1000 no no</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>resources/altitudes.dat resources/lava.dat 4000 test parallel</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerEnvironment>
     </LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>resources/altitudes.dat resources/lava.dat 1000 no no</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>resources/altitudes.dat resources/lava.dat 4000 test parallel</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>

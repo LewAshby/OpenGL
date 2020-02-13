@@ -20,7 +20,6 @@
 #include "initProgram.h"
 
 
-const int dimension = 3;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -34,9 +33,6 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
-
-std::vector<float> positions;
-std::vector<unsigned int> indices;
 
 
 int main(int argc, char** argv)
@@ -77,8 +73,8 @@ int main(int argc, char** argv)
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
 	{
-		positions = calculateVertices(ZData.nrows, ZData.ncols, dimension, ZData.values, ZData.cellsize, LData.values);
-		indices = calculatePositions(ZData.nrows, ZData.ncols, ZData.values);
+		positions = calculateVertices(nrows, ncols, dimension, ZData.values, cellsize, LData.values);
+		indices = calculatePositions(nrows, ncols, ZData.values);
 		calculateNormal(positions, indices, 13, 10);
 
 		VertexArray va;
@@ -164,8 +160,8 @@ int main(int argc, char** argv)
 				else
 					globalTransitionFunction(Z.data(), H.data(), So, dumping_factor, nrows, ncols, neighborhood, NoDataValue);
 				
-				resetNormals(positions, nrows * ncols, 13, 10);
-				calculateNormal(positions, indices, 13, 10);				
+				//resetNormals(positions, nrows * ncols, 13, 10);
+				//calculateNormal(positions, indices, 13, 10);				
 				updateLava(positions, H, nrows * ncols, 13, 3);
 
 				steps--;
