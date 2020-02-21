@@ -56,6 +56,21 @@ int initProgram(int argc, char** argv)
 	Z.assign(Z1.begin(), Z1.end());
 	H.assign(H1.begin(), H1.end());
 
+	context = cl::Context(DEVICE);
+	outflow_computation = cl::Program(context, util::loadProgram("../../../OpenGL/resources/kernels/kernel1.cl"), true);
+	mass_balance = cl::Program(context, util::loadProgram("../../../OpenGL/resources/kernels/kernel2.cl"), true);
+	outflow_reset = cl::Program(context, util::loadProgram("../../../OpenGL/resources/kernels/kernel3.cl"), true);
+
+
+	hB = cl::Buffer(context, H.begin(), H.end(), CL_MEM_READ_WRITE, true);
+	SoB = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(double) * SoSize);
+	zB = cl::Buffer(context, Z.begin(), Z.end(), CL_MEM_READ_ONLY, true);
+
+	queue = cl::CommandQueue(context);
+
+	queue.enqueueWriteBuffer(zB, CL_TRUE, 0, sizeof(double) * Z.size(), &Z[0]);
+	queue.enqueueWriteBuffer(hB, CL_TRUE, 0, sizeof(double) * H.size(), &H[0]);
+
 	if (strcmp(argv[4], "test") == 0) {
 		std::cout << "Test with data:\n\tRows: " << nrows << "\n\tColumns: " << ncols << std::endl << std::endl;
 		test(Z.data(), H.data(), So, neighborhood);
@@ -74,21 +89,6 @@ int initProgram(int argc, char** argv)
 
 	camera = Camera(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, -40.0f);
 	lightPos = glm::vec3(lightX, lightY, lightZ);
-
-	context = cl::Context(DEVICE);
-	outflow_computation = cl::Program(context, util::loadProgram("resources/kernels/kernel1.cl"), true);
-	mass_balance = cl::Program(context, util::loadProgram("resources/kernels/kernel2.cl"), true);
-	outflow_reset = cl::Program(context, util::loadProgram("resources/kernels/kernel3.cl"), true);
-
-
-	hB = cl::Buffer(context, H.begin(), H.end(), CL_MEM_READ_WRITE, true);
-	SoB = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(double) * SoSize);
-	zB = cl::Buffer(context, Z.begin(), Z.end(), CL_MEM_READ_ONLY, true);
-
-	queue = cl::CommandQueue(context);
-
-	queue.enqueueWriteBuffer(zB, CL_TRUE, 0, sizeof(double) * Z.size(), &Z[0]);
-	queue.enqueueWriteBuffer(hB, CL_TRUE, 0, sizeof(double) * H.size(), &H[0]);
 
 	return 0;
 }

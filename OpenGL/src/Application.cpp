@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 
 		IndexBuffer ib(indices.data(), indices.size() * sizeof(unsigned int));
 
-		ShaderHandler shader("resources/shaders/Basic.shader");
+		ShaderHandler shader("../../../OpenGL/resources/shaders/Basic.shader");
 		shader.Bind();
 
 		Texture texture("resources/textures/texture.png");
