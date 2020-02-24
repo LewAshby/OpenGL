@@ -30,8 +30,9 @@ int initProgram(int argc, char** argv)
 		return -1;
 	}
 
-	ZData = readFile(argv[1]);
 	LData = readFile(argv[2]);
+	ZData = readFile(argv[1]);
+
 	try
 	{
 		initSo(nrows, ncols, So);
@@ -56,20 +57,22 @@ int initProgram(int argc, char** argv)
 	Z.assign(Z1.begin(), Z1.end());
 	H.assign(H1.begin(), H1.end());
 
+	// OpenCL
+	// 1 - Define the platform
 	context = cl::Context(DEVICE);
+	// 2 - Create and build the programs
 	outflow_computation = cl::Program(context, util::loadProgram("../../../OpenGL/resources/kernels/kernel1.cl"), true);
 	mass_balance = cl::Program(context, util::loadProgram("../../../OpenGL/resources/kernels/kernel2.cl"), true);
 	outflow_reset = cl::Program(context, util::loadProgram("../../../OpenGL/resources/kernels/kernel3.cl"), true);
-
-
+	// 3 - Setup memory objects
 	hB = cl::Buffer(context, H.begin(), H.end(), CL_MEM_READ_WRITE, true);
 	SoB = cl::Buffer(context, CL_MEM_READ_WRITE, sizeof(double) * SoSize);
 	zB = cl::Buffer(context, Z.begin(), Z.end(), CL_MEM_READ_ONLY, true);
 
 	queue = cl::CommandQueue(context);
-
-	queue.enqueueWriteBuffer(zB, CL_TRUE, 0, sizeof(double) * Z.size(), &Z[0]);
-	queue.enqueueWriteBuffer(hB, CL_TRUE, 0, sizeof(double) * H.size(), &H[0]);
+	// 5.1 - Submit commands
+	/*queue.enqueueWriteBuffer(zB, CL_TRUE, 0, sizeof(double) * Z.size(), &Z[0]);
+	queue.enqueueWriteBuffer(hB, CL_TRUE, 0, sizeof(double) * H.size(), &H[0]);*/
 
 	if (strcmp(argv[4], "test") == 0) {
 		std::cout << "Test with data:\n\tRows: " << nrows << "\n\tColumns: " << ncols << std::endl << std::endl;

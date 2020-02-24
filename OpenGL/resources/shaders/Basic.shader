@@ -58,11 +58,7 @@ uniform sampler2D u_Texture;
 
 void main()
 {
-    vec4 texColor = texture(u_Texture, v_TexCoord) * ourColor;
-    //color = ourColor;
-    //color = u_Color;
-    //color = texColor;
-    //color = vec4(0.4f, 0.4f, 0.4f, 1.0f);
+    vec4 texColor = texture(u_Texture, v_TexCoord);
 
     // Ambient
     vec3 ambient = light.ambient;
@@ -81,7 +77,7 @@ void main()
 
     vec3 result = ambient + diffuse + specular;
 
-    float lavaR = lava / lavaMax / 0.4f;
+    float lavaR = lava / lavaMax;
     float RColor = 1.0f;
     float GColor = 0.6 * (1 - lavaR);
     float BColor = 0.0f;

@@ -25,10 +25,12 @@ void run(int nrows, int ncols, int nneighbors, float NDataValue)
 {
 	try
 	{
+		// 4 - Define the kernel
 		cl::make_kernel<int, int, float, int, float, cl::Buffer, cl::Buffer, cl::Buffer> kernel1(outflow_computation, "kernel1");
 		cl::make_kernel<int, int, float, int, cl::Buffer, cl::Buffer, cl::Buffer> kernel2(mass_balance, "kernel2");
 		cl::make_kernel<int, int, float, int, cl::Buffer, cl::Buffer> kernel3(outflow_reset, "kernel3");
 
+		// 5.2 - Execute Kernels
 		kernel1(
 			cl::EnqueueArgs(queue, cl::NDRange(nrows - 1, ncols - 1)),
 			nrows,

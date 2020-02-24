@@ -142,6 +142,7 @@
  * \endcode
  *
  */
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #ifndef CL_HPP_
 #define CL_HPP_
 

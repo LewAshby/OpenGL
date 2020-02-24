@@ -93,7 +93,7 @@ int main(int argc, char** argv)
 		ShaderHandler shader("../../../OpenGL/resources/shaders/Basic.shader");
 		shader.Bind();
 
-		Texture texture("resources/textures/texture.png");
+		Texture texture("../../../OpenGL/resources/textures/texture.png");
 		texture.Bind();
 
 		va.Unbind();
